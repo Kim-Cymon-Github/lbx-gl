@@ -7,6 +7,7 @@
 #include "image/lbx_image.h"
 #include "lbx_ustr.h"
 #include "lbx_refl.h"
+#include "lbx_core.h"
 #include "lbx_gl.h"
 
 typedef void (GL_APIENTRY * TGLGetStringFunc)(GLuint handle,  GLsizei bufSize,  GLsizei *length,  GLchar *data);
@@ -62,7 +63,7 @@ extern UString GetGLStringData(GLuint obj, int length, TGLGetStringFunc func);
 #define LB_WEIGHTS_8   (78u)
 #define LB_WEIGHTS_9   (79u)
 
-uint8_t EstimateAttribTypeFromName(const char *name, int l = -1);
+u8_t EstimateAttribTypeFromName(const char *name, int l = -1);
 
 //===========================================================================
 class TGLObject
@@ -93,7 +94,7 @@ typedef enum {
 class TGLShader : public TGLObject
 {
 private:
-    uint32_t flags;
+    u32_t flags;
 protected:
     void CreateGLObject(GLenum type);
     int GetIntParam(GLenum pname);
@@ -156,19 +157,19 @@ class TGLProgram : public TGLObject
 {
 protected:
     TGLShader * shaders[2];
-    uint32_t flags;
+    u32_t flags;
     int GetIntParam(GLenum pname);
 
 /*
     typedef struct {
         TGLAttributeType type;
-        int16_t idx;
+        i16_t idx;
     } AttributeDescriptor;
 
     AttributeDescriptor * attrib_info;
-    AttributeDescriptor * FindAttributeInfoByType(TGLAttributeType type, int16_t index = 0);
+    AttributeDescriptor * FindAttributeInfoByType(TGLAttributeType type, i16_t index = 0);
 */
-    uint8_t *attrib_types;
+    u8_t *attrib_types;
     void **attrib_data;
     void Analyze(void);
 
@@ -209,10 +210,10 @@ public:
     #endif //#else #ifdef _DEBUG
     inline GLint GetUniformLocation(const char *name) {return glGetUniformLocation(GetHandle(), name);}
 
-//	AttributeDescriptor GetAttributeInfoByType(TGLAttributeType type, int16_t num = 0);
-    int LocationOfAttribType(uint8_t type);
-    void SetAttributeType(int location, uint8_t type);
-    inline void SetAttributeType(const char *attribute_name, uint8_t type) { SetAttributeType(GetAttribLocation(attribute_name), type); }
+//	AttributeDescriptor GetAttributeInfoByType(TGLAttributeType type, i16_t num = 0);
+    int LocationOfAttribType(u8_t type);
+    void SetAttributeType(int location, u8_t type);
+    inline void SetAttributeType(const char *attribute_name, u8_t type) { SetAttributeType(GetAttribLocation(attribute_name), type); }
 
 
     // Attribute의 동작 모드 변경(단일값 또는 배열형)
@@ -309,14 +310,14 @@ protected:
     int LoadFromFile(const char *file_name, int target = -1);
     int LoadFromStream(lbxSTREAM *s, int target = -1);
 
-    int Load(lbxIMAGE *img);
+    int Load(LBX_IMAGE *img);
 
 public:
     TLBTexture();
     virtual ~TLBTexture();
-    virtual int SetImage(const lbxIMAGE *img, int target = -1) = 0;
+    virtual int SetImage(const LBX_IMAGE *img, int target = -1) = 0;
 
-    lbxIMAGE image_format;
+    LBX_IMAGE image_format;
     virtual GLuint GetHandle(void);
 };
 
@@ -329,7 +330,7 @@ public:
     TGLTexture3D();
     virtual ~TGLTexture3D();
 
-    virtual int SetImage(const lbxIMAGE *img, int target);
+    virtual int SetImage(const LBX_IMAGE *img, int target);
     inline int LoadFromFile(const char *file_name, int target) {return inherited::LoadFromFile(file_name, target);}
     inline int LoadFromStream(lbxSTREAM *s, int target) {return inherited::LoadFromStream(s, target);}
 
@@ -346,7 +347,7 @@ public:
     TGLTexture2D();
     virtual ~TGLTexture2D();
 
-    virtual int SetImage(const lbxIMAGE *img, int target = -1);
+    virtual int SetImage(const LBX_IMAGE *img, int target = -1);
     inline int LoadFromFile(const char *file_name) {return inherited::LoadFromFile(file_name, GL_TEXTURE_2D);}
     inline int LoadFromStream(lbxSTREAM *s) {return inherited::LoadFromStream(s, GL_TEXTURE_2D);}
 
@@ -375,7 +376,7 @@ protected:
     rect_f32 *fit;
     rect_f32 *border;
     vec2_f32 scale;
-    uint32_t flags;
+    u32_t flags;
 
     void Update(void);
 
@@ -399,7 +400,7 @@ public:
     inline void FitTo(int left, int top, int right, int bottom) {FitTo(rect_i16_(left, top, right, bottom));}
     inline void FitToXYWH(int x, int y, int width, int height) {FitTo(rect_i16_(x, y, x+width, y+height));}
     void SetBorder(rect_i16 rect, bool perforated = false);
-    inline void SetBorder(xywh_f32 xywh, bool perforated = false) {SetBorder(rect_i16_((int16_t)(xywh.x), (int16_t)(xywh.y), (int16_t)(xywh.x + xywh.width), (int16_t)(xywh.y + xywh.height)), perforated);}
+    inline void SetBorder(xywh_f32 xywh, bool perforated = false) {SetBorder(rect_i16_((i16_t)(xywh.x), (i16_t)(xywh.y), (i16_t)(xywh.x + xywh.width), (i16_t)(xywh.y + xywh.height)), perforated);}
     inline void SetBorder(int left, int top, int right, int bottom, bool perforated = false) {SetBorder(rect_i16_(left, top, right, bottom), perforated);}
     inline void SetBorderXYWH(int x, int y, int width, int height, bool perforated = false) {SetBorder(rect_i16_(x, y, x+width, y+height), perforated);}
     void ClearBase(void);
@@ -407,9 +408,9 @@ public:
 
     int FillVertexList(vec2_f32 *target, rect_f32 area, int target_stride = 0);
 
-    int BuildDrawList(void *buffer, const LB_GLBUFFER_DESC *buffer_info, int16_t *indice, rect_f32 target);
+    int BuildDrawList(void *buffer, const LB_GLBUFFER_DESC *buffer_info, i16_t *indice, rect_f32 target);
 
-    const uint8_t *GetDrawIndice(int *count = NULL);
+    const u8_t *GetDrawIndice(int *count = NULL);
     inline const vec2_f32 * GetTexCoords(void) {return tex_coord;}
     int GetVertexCount(void);
 
@@ -438,8 +439,8 @@ public:
     inline void * GetLocalData(void) {return local_data;}
     void * AppendLocalData(int count, int elem_size);
     void * InsertLocalData(int index, int count, int elem_size);
-    inline void ClearLocalData(void) {RCM_FREE(&local_data);}
-    inline int GetElemSize(void) {return rcm_elem_size(local_data);}
+    inline void ClearLocalData(void) {SVEC_FREE(&local_data);}
+    inline int GetElemSize(void) {return svec_elem_size(local_data);}
 };
 
 class TGLIndexBuffer : public TGLBufferBase
@@ -459,9 +460,9 @@ public:
 
 
 struct LB_BUFFER_DESCRIPTOR {
-    uint8_t attrib_type;
+    u8_t attrib_type;
     LB_TYPE data_type;
-    uint16_t offset;
+    u16_t offset;
 };
 
 struct LB_GL_TYPE {
@@ -491,7 +492,7 @@ public:
 //	SetTypeInfo(const LB_REFL_STRUCT_INFO *typeinfo);
 
     int Register(const lbxREFL_STRUCT_INFO *rtti);
-    TGLAttribBuffer & Register(char attrib_type, LB_TYPE data_type, uint16_t offset);
+    TGLAttribBuffer & Register(char attrib_type, LB_TYPE data_type, u16_t offset);
 
     int BindTo(TGLProgram *program, int elem_size);
     inline void Unbind(void) {glBindBuffer(GL_ARRAY_BUFFER, 0);}
@@ -501,7 +502,7 @@ public:
 
 struct LB_BUFFER_INFO {
     GLuint buffer_id;
-    uint8_t *data;
+    u8_t *data;
     int stride;
 };
 
@@ -545,7 +546,7 @@ protected:
     TGLProgram *p;
     LB_BUFFER_INFO **bi;  // [LB_BUFFER_INFO *] [LB_ATTRIB_BINDING] [LB_ATTRIB_BINDING] ...
     inline int GetBufferSubCount(LB_BUFFER_INFO *buffer_info) {
-        return (buffer_info == NULL) ? 0 : (rcm_length(buffer_info) - sizeof(LB_BUFFER_INFO)) / sizeof(LB_ATTRIB_BINDING);
+        return (buffer_info == NULL) ? 0 : (svec_length(buffer_info) - sizeof(LB_BUFFER_INFO)) / sizeof(LB_ATTRIB_BINDING);
     }
     inline LB_ATTRIB_BINDING * GetBufferSub(LB_BUFFER_INFO *buffer_info) {
         return (buffer_info == NULL) ? NULL : (LB_ATTRIB_BINDING *)(buffer_info + 1);
@@ -560,7 +561,7 @@ public:
     TGLAttribBinder(TGLProgram *program, const lbxREFL_STRUCT_INFO *typeinfo);
     ~TGLAttribBinder();
 
-    inline int GetBufferInfoCount(void) {return rcm_length(bi);}
+    inline int GetBufferInfoCount(void) {return svec_length(bi);}
 
     void SetProgram(TGLProgram * program);
     inline TGLProgram * GetProgram(void) {return p;}
@@ -618,7 +619,7 @@ struct LB_RENDER_COMMAND {
     GLenum command;
     GLuint buffer_id;
     GLenum type;
-    rcm_t indice;
+    void *indice;
     int first;
     int count;
     bool *visible;
@@ -636,15 +637,15 @@ public:
     LB_RENDER_COMMAND * Add(GLenum method, bool *visible = NULL);
     LB_RENDER_COMMAND * Add(GLenum method, LB_TYPE type, int count, bool *visible = NULL);
     LB_RENDER_COMMAND * Add(GLenum method, GLuint indice_buffer_id, GLenum elem_type, int count, bool *visible = NULL);
-    LB_RENDER_COMMAND * Add(GLenum method, const uint16_t *indice, int count, bool *visible = NULL);
-    LB_RENDER_COMMAND * Add(GLenum method, const uint8_t *indice, int count, bool *visible = NULL);
+    LB_RENDER_COMMAND * Add(GLenum method, const u16_t *indice, int count, bool *visible = NULL);
+    LB_RENDER_COMMAND * Add(GLenum method, const u8_t *indice, int count, bool *visible = NULL);
 
     LB_RENDER_COMMAND * AddArrays(GLenum method, int first, int count, bool *visible = NULL);
 
     void Clear(void);
 
-    inline int Count(void) {return rcm_length(list);}
-    inline LB_RENDER_COMMAND * Items(int index) {return list + adjust_index(index, rcm_length(list));}
+    inline int Count(void) {return svec_length(list);}
+    inline LB_RENDER_COMMAND * Items(int index) {return list + adjust_index(index, svec_length(list));}
 
     TGLProgram * GetProgram(void);
 };
@@ -668,19 +669,19 @@ typedef struct {
 
 typedef struct {
     vec2_f32 vtx;
-    uint32_t col;
+    u32_t col;
     vec2_f32 txc;
 } V2CT;
 
 typedef struct {
     vec3_f32 vtx;
-    uint32_t col;
+    u32_t col;
     vec2_f32 txc;
 } V3CT;
 
 typedef struct {
     vec4_f32 vtx;
-    uint32_t col;
+    u32_t col;
     vec2_f32 txc;
 } V4CT;
 
@@ -755,13 +756,13 @@ public:
 
     LB_ATTRIB_BINDING * SetBinding(const char *attrib_name, LB_TYPE type, GLint offset);
 
-    void FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, uint32_t color);
+    void FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, u32_t color);
 
-    int AddGlyph(TGlyph *glyph, rect_f32 area, uint32_t color);
-    inline int AddGlyph(TGlyph *glyph, xywh_f32 area, uint32_t color) {
+    int AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color);
+    inline int AddGlyph(TGlyph *glyph, xywh_f32 area, u32_t color) {
             return AddGlyph(glyph, rect_f32_(area.x, area.y, area.x + area.width, area.y + area.height), color
         );}
-    int AddLines(vec2_f32 *lines_vertice, int line_count, uint32_t color);
+    int AddLines(vec2_f32 *lines_vertice, int line_count, u32_t color);
 
     int Draw(void);
     void ClearCommandList(void);
@@ -803,7 +804,7 @@ TGLBuffer<T>::TGLBuffer()
 template <class T>
 TGLBuffer<T>::~TGLBuffer()
 {
-    rcm_free((void**)&data);
+    svec_free((void**)&data);
 }
 
 
@@ -815,7 +816,7 @@ private:
         owns_texture = 1
     };
 protected:
-    uint32_t flags;
+    u32_t flags;
     TGLTexture2D *tex;
 //	GLuint tex;
     GLuint depth;

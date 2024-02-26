@@ -7,7 +7,7 @@ end_of_line = lf
 indent_style = space
 indent_size = 4
 
-[*.{c++,cc,cpp,cppm,cu,cuh,cxx,fx,h,h++,hh,hlsl,hpp,hxx,inl,ipp,ixx,tlh,tli}]
+[*.{c,c++,cc,cpp,cppm,cu,cuh,cxx,fx,h,h++,hh,hlsl,hpp,hxx,inl,ipp,ixx,tlh,tli}]
 insert_final_newline = true
 
 # Visual C++ 코드 스타일 설정
@@ -89,3 +89,10 @@ cpp_includes_use_forward_slash = true
 
 [Makefile]
 indent_style = tab
+
+[*.{bat,cmd}]
+charset = utf-8
+end_of_line = crlf
+indent_style = space
+indent_size = 4
+

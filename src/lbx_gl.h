@@ -6,6 +6,8 @@
 
 #include "lbx.h"
 
+#define GLES_3_2
+
 #ifndef GLES
 #   if defined(GLES_1_0)
 #       define GLES 10
@@ -44,7 +46,7 @@
 #endif //#ifdef GLES
 
 #ifdef _WIN32
-#   ifdef lbx_gl_DLL
+#   ifdef LBXGLES_VERSION // LBX-GLES 라이브러리의 버전
 #       define LBX_GL_EXPORT __declspec(dllexport)
 #   else //#ifdef lbx_gl_DLL
 #       define LBX_GL_EXPORT __declspec(dllimport)
@@ -52,7 +54,6 @@
 #else //#ifdef _WIN32
 #   define LBX_GL_EXPORT
 #endif //#else #ifdef _WIN32
-
 
 
 #ifdef __cplusplus
@@ -63,31 +64,43 @@ extern "C" {
 #define RC_FLAG_OWNS_NATIVE_DISPLAY (0x00000002u)
 
 typedef struct  {
-    uint32_t flags;
-    EGLNativeWindowType native_window;
-    NativeDisplayType   native_display;
-    EGLDisplay          egl_display;
-    EGLContext          egl_context;
-    EGLSurface          egl_surface;
+    EGLNativeWindowType  native_window;
+    EGLNativeDisplayType native_display;
+    EGLDisplay           egl_display;
+    EGLContext           egl_context;
+    EGLSurface           egl_surface;
 } LBX_RENDER_CONTEXT;
-static inline void RENDER_CONTEXT_Init(LBX_RENDER_CONTEXT *ctx) {memset(ctx, 0, sizeof(LBX_RENDER_CONTEXT));}
+LBX_GL_EXPORT void LBX_RENDER_CONTEXT_init(LBX_RENDER_CONTEXT* self, EGLNativeWindowType native_window);
 
-LBX_GL_EXPORT int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLNativeWindowType native_window, NativeDisplayType native_display, EGLContext context_to_share, EGLint const  * attribList);
+LBX_GL_EXPORT int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const  * attribList);
 LBX_GL_EXPORT int RC_Free(LBX_RENDER_CONTEXT *ctx);
 
-static inline bool8_t RC_MakeCurrent(const LBX_RENDER_CONTEXT *ctx) {return (bool8_t)eglMakeCurrent(ctx->egl_display, ctx->egl_surface, ctx->egl_surface, ctx->egl_context);}
-static inline bool8_t RC_SwapBuffers(const LBX_RENDER_CONTEXT *ctx) {return (bool8_t)eglSwapBuffers(ctx->egl_display, ctx->egl_surface);}
+lbx_inline bool RC_MakeCurrent(const LBX_RENDER_CONTEXT* ctx) { return eglGetCurrentContext() == ctx->egl_context ? true : (bool)eglMakeCurrent(ctx->egl_display, ctx->egl_surface, ctx->egl_surface, ctx->egl_context); }
+lbx_inline bool RC_SwapBuffers(const LBX_RENDER_CONTEXT *ctx) { return (bool)eglSwapBuffers(ctx->egl_display, ctx->egl_surface);}
 
 LBX_GL_EXPORT const char * lbglGetErrorStr(GLenum error_code);
 LBX_GL_EXPORT const char * lbeglGetErrorStr(EGLint error_code);
 
-#if defined(ENABLE_GL_ASSERT)
-//#define GL_ASSERT(aaa) aaa; {GLint _err = glGetError(); if (_err != GL_NO_ERROR) Err_("gl_assert! " #aaa " failed: %s", lbglGetErrorStr(_err));}
-#define GL_CHECK_ERROR {GLint _err = glGetError(); if (_err != GL_NO_ERROR) {Err_("GL error - %s", lbglGetErrorStr(_err));}}
-#define GL_ASSERT(aaa) {GLint _err = glGetError(); if (_err != GL_NO_ERROR) {Err_("Previous GL error detected - %s", lbglGetErrorStr(_err));} aaa; _err = glGetError();if (_err != GL_NO_ERROR) {Err_("gl_assert! " #aaa " failed: %s", lbglGetErrorStr(_err));}}
+#if defined(ENABLE_GL_CHECK)
+//#define GL_CHECK(aaa) aaa; {GLint _err = glGetError(); if (_err != GL_NO_ERROR) Err_("gl_assert! " #aaa " failed: %s", lbglGetErrorStr(_err));}
+#define GL_CHECK_READY do { \
+    GLint _err = glGetError();  \
+    if (_err != GL_NO_ERROR) { \
+        Err_("GL_CHECK - %s", lbglGetErrorStr(_err)); \
+    } \
+} while (0)
+
+#define GL_CHECK(...) do { \
+    __VA_ARGS__; \
+    _err = glGetError(); \
+    if (_err != GL_NO_ERROR) { \
+        Err_("GL_CHECK(" #aaa ") failed: %s", lbglGetErrorStr(_err)); \
+    } \
+} while (0)
+
 #else //#if defined(ENABLE_GL_ASSERT)
-#define GL_CHECK_ERROR
-#define GL_ASSERT(...) __VA_ARGS__
+#define GL_CHECK_READY do {} while(0)
+#define GL_CHECK(...) __VA_ARGS__
 #endif //#else #if defined(ENABLE_GL_ASSERT)
 
 

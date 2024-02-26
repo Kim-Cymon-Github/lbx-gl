@@ -8,7 +8,7 @@
 #include "GLES2/gl2ext.h"
 #include "system/lbx_log.h"
 #include "system/lbx_stream_file.h"
-//#include "image/lbxIMAGE.h"
+//#include "image/LBX_IMAGE.h"
 //---------------------------------------------------------------------------
 #ifdef __BORLANDC__
 #pragma package(smart_init)
@@ -69,15 +69,15 @@ int TLBTexture::LoadFromStream(lbxSTREAM *s, int target)
 {
     int ret = 0;
 /*
-    if (lbxIMAGE_LoadFromStream(&image_format, s) > 0) {
+    if (LBX_IMAGE_LoadFromStream(&image_format, s) > 0) {
         ret = SetImage(&image_format, (int)target);
-        lbxIMAGE_Free(&image_format);
+        LBX_IMAGE_Free(&image_format);
     }
-    lbxIMAGE_DataToOffset(&image_format);
+    LBX_IMAGE_DataToOffset(&image_format);
 */	return ret;
 }
 //---------------------------------------------------------------------------
-int TLBTexture::Load(lbxIMAGE *img)
+int TLBTexture::Load(LBX_IMAGE *img)
 {
     return 0;
 }
@@ -85,7 +85,8 @@ int TLBTexture::Load(lbxIMAGE *img)
 GLuint TLBTexture::GetHandle(void)
 {
     if (handle == 0) {
-        GL_ASSERT(glGenTextures(1, &handle));
+        GL_CHECK_READY;
+        GL_CHECK(glGenTextures(1, &handle));
     }
     return handle;
 }
@@ -131,7 +132,7 @@ TGLTexture3D::~TGLTexture3D()
 
 }
 //---------------------------------------------------------------------------
-int TGLTexture3D::SetImage(const lbxIMAGE *img, int target)
+int TGLTexture3D::SetImage(const LBX_IMAGE *img, int target)
 {
     size2_i16 sz = img->planes[0].size;
     GLenum fmt;
@@ -139,12 +140,12 @@ int TGLTexture3D::SetImage(const lbxIMAGE *img, int target)
     fmt = get_gl_format(img->pixel_format);
     if (fmt) {
         Bind();
-        GL_ASSERT(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + target, 0, fmt, sz.width, sz.height, 0, fmt, GL_UNSIGNED_BYTE, (void*)(img->planes[0].data)));
+        GL_CHECK(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + target, 0, fmt, sz.width, sz.height, 0, fmt, GL_UNSIGNED_BYTE, (void*)(img->planes[0].data)));
 
-        GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-        GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-        GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+        GL_CHECK(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        GL_CHECK(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GL_CHECK(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+        GL_CHECK(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
         return 1;
     } else {
         return 0;
@@ -157,7 +158,7 @@ int TGLTexture3D::SetImage(const lbxIMAGE *img, int target)
 TGLTexture2D::TGLTexture2D()
     : inherited()
 {
-    memset(&image_format, 0, sizeof(lbxIMAGE));
+    memset(&image_format, 0, sizeof(LBX_IMAGE));
 }
 //---------------------------------------------------------------------------
 TGLTexture2D::~TGLTexture2D()
@@ -167,7 +168,7 @@ TGLTexture2D::~TGLTexture2D()
     }
 }
 //---------------------------------------------------------------------------
-int TGLTexture2D::SetImage(const lbxIMAGE *img, int target)
+int TGLTexture2D::SetImage(const LBX_IMAGE *img, int target)
 {
     fourcc_t pf = img->pixel_format;
     size2_i16 sz = img->planes[0].size;
@@ -175,7 +176,7 @@ int TGLTexture2D::SetImage(const lbxIMAGE *img, int target)
 
     GetHandle();
     if (handle == 0) {
-        GL_ASSERT(glGenTextures(1, &handle));
+        GL_CHECK(glGenTextures(1, &handle));
     }
     if (target == -1) {
         target = GL_TEXTURE_2D;
@@ -184,23 +185,23 @@ int TGLTexture2D::SetImage(const lbxIMAGE *img, int target)
     fmt = get_gl_format(img->pixel_format);
     if (fmt) {
         GLenum t = (target == GL_TEXTURE_2D) ? GL_TEXTURE_2D : GL_TEXTURE_CUBE_MAP;
-        GL_ASSERT(glBindTexture(t, GetHandle()));
-        GL_ASSERT(glTexImage2D(target, 0, fmt, sz.width, sz.height, 0, fmt, GL_UNSIGNED_BYTE, (void*)(img->planes[0].data)));
+        GL_CHECK(glBindTexture(t, GetHandle()));
+        GL_CHECK(glTexImage2D(target, 0, fmt, sz.width, sz.height, 0, fmt, GL_UNSIGNED_BYTE, (void*)(img->planes[0].data)));
 
         if (t == GL_TEXTURE_2D) {
         #if 1 // Mipmap 사용
-            GL_ASSERT(glTexParameteri(t, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-            GL_ASSERT(glTexParameteri(t, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
-            GL_ASSERT(glGenerateMipmap(t));
+            GL_CHECK(glTexParameteri(t, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+            GL_CHECK(glTexParameteri(t, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+            GL_CHECK(glGenerateMipmap(t));
         #else
-            GL_ASSERT(glTexParameteri(t, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-            GL_ASSERT(glTexParameteri(t, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+            GL_CHECK(glTexParameteri(t, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+            GL_CHECK(glTexParameteri(t, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
         #endif
         } else {
-            GL_ASSERT(glTexParameteri(t, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-            GL_ASSERT(glTexParameteri(t, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-            GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-            GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+            GL_CHECK(glTexParameteri(t, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+            GL_CHECK(glTexParameteri(t, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+            GL_CHECK(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+            GL_CHECK(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
         }
         return 1;
     } else {
@@ -229,10 +230,10 @@ static inline void rect_normalize(rect_f32 *out, rect_i16 in, size2_i16 res)
     out->bottom = (float)in.bottom * sc.y;
 }
 
-uint8_t idx_rect_triangles[] = {0,2,1,2,3,1};
-uint8_t idx_rect_triangle_strip[] = {0,2,1,3};
-uint8_t idx_border_triangles[] = {0,4,1,1,4,5,1,5,2,2,5,6,2,6,3,3,6,7,4,8,5,5,8,9,6,10,7,7,10,11,8,12,9,9,12,13,9,13,10,10,13,14,10,14,11,11,14,15,5,9,6,6,9,10};
-uint8_t idx_border_triangle_strip[] = {0,4,1,5,2,6,3,7,7,7,6,11,10,15,14,14,14,10,13,9,12,8,8,8,9,4,5,5,5,9,6,10};
+u8_t idx_rect_triangles[] = {0,2,1,2,3,1};
+u8_t idx_rect_triangle_strip[] = {0,2,1,3};
+u8_t idx_border_triangles[] = {0,4,1,1,4,5,1,5,2,2,5,6,2,6,3,3,6,7,4,8,5,5,8,9,6,10,7,7,10,11,8,12,9,9,12,13,9,13,10,10,13,14,10,14,11,11,14,15,5,9,6,6,9,10};
+u8_t idx_border_triangle_strip[] = {0,4,1,5,2,6,3,7,7,7,6,11,10,15,14,14,14,10,13,9,12,8,8,8,9,4,5,5,5,9,6,10};
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -248,7 +249,7 @@ TGlyph::~TGlyph()
 {
     ClearBase();
     ClearBorder();
-    RCM_FREE(&tex_coord);
+    SVEC_FREE(&tex_coord);
 }
 //---------------------------------------------------------------------------
 void TGlyph::ClearBase(void)
@@ -296,7 +297,7 @@ void TGlyph::SetBorder(rect_i16 rect, bool perforated)
 void TGlyph::Update(void)
 {
     if (border) {
-        RCM_SET_LENGTH(vec2_f32, &tex_coord, 16);
+        SVEC_SET_LENGTH(vec2_f32, &tex_coord, 16);
         tex_coord[ 0] = vec2_f32_(boundary.left, boundary.top);
         tex_coord[15] = vec2_f32_(boundary.right, boundary.bottom);
         tex_coord[ 5] = vec2_f32_(tex_coord[ 0].x + border->left, tex_coord[ 0].y + border->top);
@@ -318,7 +319,7 @@ void TGlyph::Update(void)
         tex_coord[13] = vec2_f32_(tex_coord[ 5].x, tex_coord[15].y);
         tex_coord[14] = vec2_f32_(tex_coord[10].x, tex_coord[15].y);
     } else {
-        RCM_SET_LENGTH(vec2_f32, &tex_coord, 4);
+        SVEC_SET_LENGTH(vec2_f32, &tex_coord, 4);
         tex_coord[0] = vec2_f32_(boundary.left, boundary.top);
         tex_coord[1] = vec2_f32_(boundary.right, boundary.top);
         tex_coord[2] = vec2_f32_(boundary.left, boundary.bottom);
@@ -331,7 +332,7 @@ int TGlyph::GetVertexCount(void)
     return (border ? 16 : 4);
 }
 //---------------------------------------------------------------------------
-#define PTR_OFFSET(ptr, offset) ((uint8_t*)ptr + offset)
+#define PTR_OFFSET(ptr, offset) ((u8_t*)ptr + offset)
 int TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, int target_stride)
 {
     size2_i16 res = texture->image_format.planes[0].size;
@@ -343,7 +344,7 @@ int TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, int target_stride)
     vec2_f32 *p[16];
     int vtx_count = (border) ? 16 : 4;
     for (int i = 0; i < vtx_count; i++) {
-        p[i] = (vec2_f32*)((uint8_t*)target + target_stride * i);
+        p[i] = (vec2_f32*)((u8_t*)target + target_stride * i);
     }
 
     // 좌상, 우하 좌표부터 먼저 계산함
@@ -388,7 +389,7 @@ int TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, int target_stride)
     return 4;
 }
 //---------------------------------------------------------------------------
-const uint8_t *TGlyph::GetDrawIndice(int *count)
+const u8_t *TGlyph::GetDrawIndice(int *count)
 {
     if (border) {
         if (count) {
@@ -406,10 +407,10 @@ const uint8_t *TGlyph::GetDrawIndice(int *count)
     }
 }
 //---------------------------------------------------------------------------
-int TGlyph::BuildDrawList(void *buffer, const LB_GLBUFFER_DESC *bi, int16_t *indice, rect_f32 target)
+int TGlyph::BuildDrawList(void *buffer, const LB_GLBUFFER_DESC *bi, i16_t *indice, rect_f32 target)
 {
     int stride;
-    uint8_t *b = (uint8_t *)buffer;
+    u8_t *b = (u8_t *)buffer;
 
     if (!(LB_TYPE_ELEMTYPE(bi->vertex.type) == LB_TYPE_F32 &&
         LB_TYPE_ELEMTYPE(bi->tex_coord.type) == LB_TYPE_F32)) {
@@ -420,12 +421,12 @@ int TGlyph::BuildDrawList(void *buffer, const LB_GLBUFFER_DESC *bi, int16_t *ind
     stride = bi->stride;
     if (border == NULL) {
         if (fit == NULL) {
-            b = (uint8_t *)buffer + bi->vertex.offset;
+            b = (u8_t *)buffer + bi->vertex.offset;
             *(vec2_f32*)(b + stride * 0) = vec2_f32_(target.left, target.top);
             *(vec2_f32*)(b + stride * 1) = vec2_f32_(target.right, target.top);
             *(vec2_f32*)(b + stride * 2) = vec2_f32_(target.left, target.bottom);
             *(vec2_f32*)(b + stride * 3) = vec2_f32_(target.right, target.bottom);
-            b = (uint8_t *)buffer + bi->tex_coord.offset;
+            b = (u8_t *)buffer + bi->tex_coord.offset;
 /*
             *(vec2_f32*)(b + stride * 0) = vec2_f32_(target.left, target.top);
             *(vec2_f32*)(b + stride * 1) = vec2_f32_(target.right, target.top);
@@ -461,7 +462,7 @@ TGLShader::TGLShader(GLenum type)
 /*
     char test[1024];
     GLsizei a,b;
-    GL_ASSERT(glGetShaderSource(shader,  1024,  &a,  test));
+    GL_CHECK(glGetShaderSource(shader,  1024,  &a,  test));
 */
 }
 //---------------------------------------------------------------------------
@@ -498,14 +499,14 @@ void TGLShader::CreateGLObject(GLenum type)
 int TGLShader::GetIntParam(GLenum pname)
 {
     GLint info = 0;
-    GL_ASSERT(glGetShaderiv(handle, pname, &info));
+    GL_CHECK(glGetShaderiv(handle, pname, &info));
     return info;
 }
 //---------------------------------------------------------------------------
 int TGLShader::Load(const void *data, int length, GLenum binaryformat)
 {
     Log_("glShaderBinary...");
-    GL_ASSERT(glShaderBinary(1, (GLuint *)&handle, binaryformat, data, length));
+    GL_CHECK(glShaderBinary(1, (GLuint *)&handle, binaryformat, data, length));
     if (glGetError() == GL_NO_ERROR) {
         Log_("Shader binary loaded successfully.");
         return 1;
@@ -518,9 +519,9 @@ int TGLShader::Load(const void *data, int length, GLenum binaryformat)
 int TGLShader::SetBinary(lbxSTREAM *strm)
 {
     int ret;
-    uint8_t *b = NULL;
+    u8_t *b = NULL;
     int l = (int)stream_get_size(strm);
-    RCM_SET_LENGTH(uint8_t, &b, l);
+    SVEC_SET_LENGTH(u8_t, &b, l);
     stream_read(strm, b, l);
     Log_("%d bytes loaded", l);
 
@@ -528,15 +529,15 @@ int TGLShader::SetBinary(lbxSTREAM *strm)
 /*
     int format_cnt = 0;
     int formats[10];
-    GL_ASSERT(glGetIntegerv(GL_NUM_SHADER_BINARY_FORMATS, &format_cnt));
+    GL_CHECK(glGetIntegerv(GL_NUM_SHADER_BINARY_FORMATS, &format_cnt));
     Log_("%d formats supported", format_cnt);
-    GL_ASSERT(glGetIntegerv(GL_SHADER_BINARY_FORMATS, formats));
+    GL_CHECK(glGetIntegerv(GL_SHADER_BINARY_FORMATS, formats));
     for (int i = 0; i < format_cnt; i++) {
         Log_("%d: %d(GL_MALI_SHADER_BINARY_ARM=%d)", i, formats[i], GL_MALI_SHADER_BINARY_ARM);
     }
 */
     ret = Load(b, l, GL_MALI_SHADER_BINARY_ARM);
-    RCM_FREE(&b);
+    SVEC_FREE(&b);
     return ret;
 
 }
@@ -548,14 +549,14 @@ int TGLShader::SetSource(GLint count, const char **codes, const GLint *lengths)
     }
     GLuint shader = GetHandle();
     // Load the shader source
-    GL_ASSERT(glShaderSource(shader, count, codes, lengths));
+    GL_CHECK(glShaderSource(shader, count, codes, lengths));
     // Compile the shader
-    GL_ASSERT(glCompileShader(shader));
+    GL_CHECK(glCompileShader(shader));
 
     if (GetCompileStatus()) {
-        flags |= (uint32_t)(sfCompiled);
+        flags |= (u32_t)(sfCompiled);
     } else {
-        flags &= ~(uint32_t)(sfCompiled);
+        flags &= ~(u32_t)(sfCompiled);
         Err_("Error compiling shader: %s", GetInfoLog().c_str());
         return 0;
     }
@@ -609,7 +610,7 @@ int TGLShader::SetSource(lbxSTREAM *strm)
 //---------------------------------------------------------------------------
 bool TGLShader::IsCompiled(void)
 {
-    return flags & (uint32_t)(sfCompiled);
+    return flags & (u32_t)(sfCompiled);
 }
 
 //---------------------------------------------------------------------------
@@ -723,17 +724,17 @@ TGLProgram::~TGLProgram()
         // glDetachShader가 자동으로 호출되는지 확인할 것
         for (int i = 0; i < 2; i++) {
             if (shaders[i]) {
-                GL_ASSERT(glDetachShader(handle, shaders[i]->GetHandle()));
+                GL_CHECK(glDetachShader(handle, shaders[i]->GetHandle()));
             }
             SetShader(i, NULL);
         }
-        GL_ASSERT(glDeleteProgram(handle));
+        GL_CHECK(glDeleteProgram(handle));
     }
-    RCM_FREE(&attrib_types);
-    for (int i = rcm_length(attrib_data) - 1; i >= 0; i--) {
+    SVEC_FREE(&attrib_types);
+    for (int i = svec_length(attrib_data) - 1; i >= 0; i--) {
         free_memory(attrib_data[i]);
     }
-    RCM_FREE(&attrib_data);
+    SVEC_FREE(&attrib_data);
 }
 //---------------------------------------------------------------------------
 GLuint TGLProgram::GetHandle(void)
@@ -746,7 +747,7 @@ GLuint TGLProgram::GetHandle(void)
 //---------------------------------------------------------------------------
 void TGLProgram::SetShader(int index, TGLShader *shader)
 {
-    uint32_t f = ((uint32_t)(pfOwnsVertexShader) << index);
+    u32_t f = ((u32_t)(pfOwnsVertexShader) << index);
     if (flags & f) {
         delete shaders[index];
         flags &= ~f;
@@ -793,7 +794,7 @@ TGLFragmentShader * TGLProgram::GetFragmentShader(void)
 int TGLProgram::GetIntParam(GLenum pname)
 {
     GLint info = 0;
-    GL_ASSERT(glGetProgramiv(GetHandle(), pname, &info));
+    GL_CHECK(glGetProgramiv(GetHandle(), pname, &info));
     return info;
 }
 //---------------------------------------------------------------------------
@@ -819,10 +820,10 @@ int TGLProgram::LoadBinary(const void *data, int length, GLenum bin_format)
     #ifndef GL_GLEXT_PROTOTYPES
     static PFNGLPROGRAMBINARYOESPROC glProgramBinaryOES = (PFNGLPROGRAMBINARYOESPROC)eglGetProcAddress("glProgramBinaryOES");
     #endif //#ifndef GL_GLEXT_PROTOTYPES
-    flags &= ~(uint32_t)pfLinked;
+    flags &= ~(u32_t)pfLinked;
     glProgramBinaryOES(GetHandle(), bin_format, data, length);
     if (glGetError() == GL_NO_ERROR) {
-        flags |= (uint32_t)pfLinked;
+        flags |= (u32_t)pfLinked;
         Analyze();
         return 1;
     } else {
@@ -843,7 +844,7 @@ int TGLProgram::SaveBinary(void *dst, int dst_size, GLenum *bin_format)
     if (bin_format == NULL) {
         bin_format = &binfmt;
     }
-    GL_ASSERT(glGetProgramBinaryOES(GetHandle(), dst_size, &length, bin_format, dst));
+    GL_CHECK(glGetProgramBinaryOES(GetHandle(), dst_size, &length, bin_format, dst));
     return length;
 }
 //---------------------------------------------------------------------------
@@ -851,12 +852,12 @@ int TGLProgram::SaveToMem(void **rcm)
 {
     int l = GetBinarySize(), r;
     if (l > 0) {
-        rcm_set_length(rcm, l, 1);
+        svec_set_length(rcm, l, 1);
         GLenum bin_format;
         r = SaveBinary(*rcm, l, &bin_format);
         if (l != r) {
             Err_("Binary size mismatch - %d:%d", l, r);
-            rcm_set_length(rcm, r, 1);
+            svec_set_length(rcm, r, 1);
         } else {
             Log_("Saved program binary (%d bytes, format=0x%X)", r, bin_format);
         }
@@ -877,8 +878,8 @@ int TGLProgram::SaveToStream(lbxSTREAM *s)
 {
     void *buf = NULL;
     SaveToMem(&buf);
-    int r = (int)stream_write(s, buf, rcm_length(buf));
-    rcm_free(&buf);
+    int r = (int)stream_write(s, buf, svec_length(buf));
+    svec_free(&buf);
     return r;
 }
 //---------------------------------------------------------------------------
@@ -898,7 +899,7 @@ TGLShader * TGLProgram::CreateShader(GLenum type, const char *src, const char *h
         SetShader(i, NULL);
         if (ns->IsCompiled()) {
             shaders[i] = ns;
-            flags |= ((uint32_t)pfOwnsVertexShader << i);
+            flags |= ((u32_t)pfOwnsVertexShader << i);
         } else {
             delete ns;
             ns = NULL;
@@ -950,9 +951,9 @@ const UString g_JOINT       = "joint";
 const UString g_WEIGHT       = "weight";
 
 //---------------------------------------------------------------------------
-uint8_t EstimateAttribTypeFromName(const char *param_name, int l)
+u8_t EstimateAttribTypeFromName(const char *param_name, int l)
 {
-    uint8_t type = 0u;
+    u8_t type = 0u;
     UString lc;
     const char *name = NULL;
     const char *found = NULL;
@@ -1011,7 +1012,7 @@ uint8_t EstimateAttribTypeFromName(const char *param_name, int l)
     for (; *found != 0; found++) {
         char c = *found;
         if (c >= '0' && c <= '9') {
-            type |= (uint8_t)(c - '0');
+            type |= (u8_t)(c - '0');
         }
     }
 
@@ -1024,9 +1025,9 @@ void TGLProgram::Analyze(void)
     int missing_count = 0;
     int attrib_count = GetIntParam(GL_ACTIVE_ATTRIBUTES);
     int max_length = GetIntParam(GL_ACTIVE_ATTRIBUTE_MAX_LENGTH);
-    RCM_SET_LENGTH(uint8_t, &attrib_types, attrib_count);
-    RCM_SET_LENGTH(void *, &attrib_data, attrib_count);
-    memset(attrib_types, 0, sizeof(uint8_t) * attrib_count);
+    SVEC_SET_LENGTH(u8_t, &attrib_types, attrib_count);
+    SVEC_SET_LENGTH(void *, &attrib_data, attrib_count);
+    memset(attrib_types, 0, sizeof(u8_t) * attrib_count);
     memset(attrib_data, 0, sizeof(void *) * attrib_count);
 
     UString name;
@@ -1050,9 +1051,9 @@ void TGLProgram::Analyze(void)
 }
 //---------------------------------------------------------------------------
 /*
-TGLProgram::AttributeDescriptor * TGLProgram::FindAttributeInfoByType(TGLAttributeType type, int16_t num)
+TGLProgram::AttributeDescriptor * TGLProgram::FindAttributeInfoByType(TGLAttributeType type, i16_t num)
 {
-    int l = rcm_length(attrib_info);
+    int l = svec_length(attrib_info);
     for (int i = 0; i < l; i++) {
         if (attrib_info[i].type == type && attrib_info[i].idx == num) {
             return attrib_info + i;
@@ -1063,9 +1064,9 @@ TGLProgram::AttributeDescriptor * TGLProgram::FindAttributeInfoByType(TGLAttribu
 //---------------------------------------------------------------------------
 */
 /*
-TGLProgram::AttributeDescriptor * TGLProgram::FindAttributeInfoByLoc(TGLAttributeType type, int16_t num)
+TGLProgram::AttributeDescriptor * TGLProgram::FindAttributeInfoByLoc(TGLAttributeType type, i16_t num)
 {
-    int l = rcm_length(attrib_info);
+    int l = svec_length(attrib_info);
     for (int i = 0; i < l; i++) {
         if (attrib_info[i].type == type && attrib_info[i].idx == num) {
             return attrib_info + i;
@@ -1074,9 +1075,9 @@ TGLProgram::AttributeDescriptor * TGLProgram::FindAttributeInfoByLoc(TGLAttribut
     return NULL;
 }
 */
-int TGLProgram::LocationOfAttribType(uint8_t type)
+int TGLProgram::LocationOfAttribType(u8_t type)
 {
-    int l = rcm_length(attrib_types);
+    int l = svec_length(attrib_types);
     for (int i = 0; i < l; i++) {
         if (attrib_types[i] == type) {
             return i;
@@ -1085,9 +1086,9 @@ int TGLProgram::LocationOfAttribType(uint8_t type)
     return -1;
 }
 //---------------------------------------------------------------------------
-void TGLProgram::SetAttributeType(int location, uint8_t type)
+void TGLProgram::SetAttributeType(int location, u8_t type)
 {
-    int l = rcm_length(attrib_types);
+    int l = svec_length(attrib_types);
     assert(location >= 0 && location < l);
     attrib_types[location] = type;
 }
@@ -1095,16 +1096,16 @@ void TGLProgram::SetAttributeType(int location, uint8_t type)
 int TGLProgram::Link(void)
 {
     GLuint program = GetHandle();
-    flags &= ~(uint32_t)pfLinked;
+    flags &= ~(u32_t)pfLinked;
     for (int i = 0; i < 2; i++) {
         if (shaders[i]) {
-            GL_ASSERT(glAttachShader(program, shaders[i]->GetHandle()));
+            GL_CHECK(glAttachShader(program, shaders[i]->GetHandle()));
         }
     }
-    GL_ASSERT(glLinkProgram(program));
+    GL_CHECK(glLinkProgram(program));
 
     if (GetLinkStatus()) {
-        flags |= (uint32_t)pfLinked;
+        flags |= (u32_t)pfLinked;
         Analyze();
     } else {
         Err_("Error linking program: %s", GetInfoLog().c_str());
@@ -1115,7 +1116,7 @@ int TGLProgram::Link(void)
 //---------------------------------------------------------------------------
 bool TGLProgram::IsLinked(void)
 {
-    return (flags & (uint32_t)pfLinked);
+    return (flags & (u32_t)pfLinked);
 }
 
 //---------------------------------------------------------------------------
@@ -1123,7 +1124,7 @@ void TGLProgram::DisableArrayMode(int location)
 {
     Use();
     if (location == -1) {
-        int l = rcm_length(attrib_types);
+        int l = svec_length(attrib_types);
         for (int i = 0; i < l; i++) {
             glDisableVertexAttribArray(i);
         }
@@ -1136,7 +1137,7 @@ void TGLProgram::EnableArrayMode(int location)
 {
     Use();
     if (location == -1) {
-        int l = rcm_length(attrib_types);
+        int l = svec_length(attrib_types);
         for (int i = 0; i < l; i++) {
             glEnableVertexAttribArray(i);
         }
@@ -1287,27 +1288,27 @@ TGLBufferBase::TGLBufferBase(GLenum target)
 TGLBufferBase::~TGLBufferBase()
 {
     if (handle) {
-        GL_ASSERT(glDeleteBuffers(1, &handle));
+        GL_CHECK(glDeleteBuffers(1, &handle));
     }
 }
 //---------------------------------------------------------------------------
 void TGLBufferBase::Bind(GLenum target)
 {
-    GL_ASSERT(glBindBuffer(target, GetHandle()));
+    GL_CHECK(glBindBuffer(target, GetHandle()));
 }
 //---------------------------------------------------------------------------
 int TGLBufferBase::GetIntParam(GLenum target, GLenum pname)
 {
     GLint v = 0;
     glBindBuffer(target, GetHandle());
-    GL_ASSERT(glGetBufferParameteriv(target, pname, &v));
+    GL_CHECK(glGetBufferParameteriv(target, pname, &v));
     return v;
 }
 //---------------------------------------------------------------------------
 GLuint TGLBufferBase::GetHandle(void)
 {
     if (handle == 0) {
-        GL_ASSERT(glGenBuffers(1, &handle));
+        GL_CHECK(glGenBuffers(1, &handle));
     }
     return handle;
 }
@@ -1315,25 +1316,25 @@ GLuint TGLBufferBase::GetHandle(void)
 int TGLBufferBase::Upload(GLenum target, GLenum usage)
 {
     Bind(target);
-    GL_ASSERT(glBufferData(target, rcm_size(local_data), local_data, usage));
+    GL_CHECK(glBufferData(target, svec_size(local_data), local_data, usage));
     return 1;
 }
 //---------------------------------------------------------------------------
 int TGLBufferBase::Upload(GLenum target, const void *data, int size, GLenum usage)
 {
     Bind(target);
-    GL_ASSERT(glBufferData(target, size, data, usage));
+    GL_CHECK(glBufferData(target, size, data, usage));
     return 1;
 }
 //---------------------------------------------------------------------------
 void * TGLBufferBase::AppendLocalData(int count, int elem_size)
 {
-    return rcm_append(&local_data, count, elem_size);
+    return svec_append(&local_data, count, elem_size);
 }
 //---------------------------------------------------------------------------
 void * TGLBufferBase::InsertLocalData(int index, int count, int elem_size)
 {
-    return rcm_insert(&local_data, index, count, elem_size);
+    return svec_insert(&local_data, index, count, elem_size);
 }
 //---------------------------------------------------------------------------
 
@@ -1434,12 +1435,12 @@ TGLAttribBuffer::TGLAttribBuffer(void *data, int size, GLenum usage)
 
 TGLAttribBuffer::~TGLAttribBuffer()
 {
-    RCM_FREE(&bd);
+    SVEC_FREE(&bd);
 }
 
-TGLAttribBuffer & TGLAttribBuffer::Register(char attrib_type, LB_TYPE data_type, uint16_t offset)
+TGLAttribBuffer & TGLAttribBuffer::Register(char attrib_type, LB_TYPE data_type, u16_t offset)
 {
-    LB_BUFFER_DESCRIPTOR *p = RCM_APPEND(LB_BUFFER_DESCRIPTOR, &bd, 1);
+    LB_BUFFER_DESCRIPTOR *p = SVEC_APPEND(LB_BUFFER_DESCRIPTOR, &bd, 1);
     p->attrib_type = attrib_type;
     p->data_type = data_type;
     p->offset = offset;
@@ -1448,12 +1449,12 @@ TGLAttribBuffer & TGLAttribBuffer::Register(char attrib_type, LB_TYPE data_type,
 
 int TGLAttribBuffer::Register(const lbxREFL_STRUCT_INFO *rtti)
 {
-    RCM_FREE(&bd);
+    SVEC_FREE(&bd);
     lbxREFL_MEMBER_ITERATOR it = refl_get_member_iterator(rtti);
     const lbxREFL_MEMBER_INFO *mi;
     int r = 0;
     while ((mi = refl_next_member(&it)) != NULL) {
-        uint8_t attrib_type = EstimateAttribTypeFromName(mi->id);
+        u8_t attrib_type = EstimateAttribTypeFromName(mi->id);
         if (attrib_type) {
             Register(attrib_type, mi->type, mi->offset);
             r++;
@@ -1466,7 +1467,7 @@ int TGLAttribBuffer::Register(const lbxREFL_STRUCT_INFO *rtti)
 int TGLAttribBuffer::BindTo(TGLProgram *program, int elem_size)
 {
     int i, i_end, r = 0;
-    i_end = rcm_length(bd);
+    i_end = svec_length(bd);
     program->Use();
     Bind();
     for (i = 0; i < i_end; i++) {
@@ -1573,21 +1574,21 @@ void TGLAttribBinder::SetProgram(TGLProgram * program)
 //---------------------------------------------------------------------------
 LB_BUFFER_INFO * TGLAttribBinder::add_buffer(void)
 {
-    LB_BUFFER_INFO ** r = RCM_APPEND(LB_BUFFER_INFO *, &bi, 1);
-    *r = (LB_BUFFER_INFO *)rcm_from_length(sizeof(LB_BUFFER_INFO), 1);
+    LB_BUFFER_INFO ** r = SVEC_APPEND(LB_BUFFER_INFO *, &bi, 1);
+    *r = (LB_BUFFER_INFO *)svec_alloc(sizeof(LB_BUFFER_INFO), 1);
     return *r;
 }
 //---------------------------------------------------------------------------
 LB_ATTRIB_BINDING * TGLAttribBinder::AddBinding(LB_BUFFER_INFO *buffer_info)
 {
     LB_BUFFER_INFO ** pbi = bi;
-    int l = rcm_length(bi);
+    int l = svec_length(bi);
     if (l == 0) {
         return NULL;
     }
     pbi = (buffer_info == NULL) ? bi + (l - 1) : find_buffer(buffer_info);
     if (pbi) {
-        return (LB_ATTRIB_BINDING *)rcm_append((void**)pbi, sizeof(LB_ATTRIB_BINDING), 1);
+        return (LB_ATTRIB_BINDING *)svec_append((void**)pbi, sizeof(LB_ATTRIB_BINDING), 1);
     } else {
         return NULL;
     }
@@ -1607,14 +1608,14 @@ LB_BUFFER_INFO * TGLAttribBinder::SetBuffer(void * buffer_addr, int stride)
     LB_BUFFER_INFO *r = add_buffer();
     r->buffer_id = 0;
     r->stride = stride;
-    r->data = (uint8_t*)buffer_addr;
+    r->data = (u8_t*)buffer_addr;
     return r;
 }
 //---------------------------------------------------------------------------
 LB_BUFFER_INFO ** TGLAttribBinder::find_buffer(LB_BUFFER_INFO* to_find)
 {
     LB_BUFFER_INFO ** pbi = bi;
-    int l = rcm_length(bi);
+    int l = svec_length(bi);
     for (int i = 0; i < l; i++, pbi++) {
         if (*pbi == to_find) {
             return pbi;
@@ -1711,11 +1712,11 @@ int TGLAttribBinder::AddUniform(GLint uniform_loc, LB_TYPE type, void *data)
 void TGLAttribBinder::Clear(void)
 {
     int i, i_end;
-    i_end = rcm_length(bi);
+    i_end = svec_length(bi);
     for (i = 0; i < i_end; i++) {
-        rcm_free((void**)(bi + i));
+        svec_free((void**)(bi + i));
     }
-    rcm_free((void**)&bi);
+    svec_free((void**)&bi);
 }
 //---------------------------------------------------------------------------
 
@@ -1726,7 +1727,7 @@ int TGLAttribBinder::Enable(void)
         return 0;
     }
     p->Use();
-    i_end = rcm_length(bi);
+    i_end = svec_length(bi);
     for (i = 0; i < i_end; i++) {
         j_end = GetBufferSubCount(bi[i]);
         glBindBuffer(GL_ARRAY_BUFFER, bi[i]->buffer_id);
@@ -1745,7 +1746,7 @@ int TGLAttribBinder::Enable(void)
 int TGLAttribBinder::Disable(void)
 {
     int i, i_end, j, j_end;
-    i_end = rcm_length(bi);
+    i_end = svec_length(bi);
     if (p == NULL) {
         return 0;
     }
@@ -1776,14 +1777,14 @@ void TGLCommandList::Clear(void)
 {
     int i, i_end = Count();
     for (i = 0; i < i_end; i++) {
-        RCM_FREE(&(list[i].indice));
+        SVEC_FREE(&(list[i].indice));
     }
-    RCM_FREE(&list);
+    SVEC_FREE(&list);
 }
 
 LB_RENDER_COMMAND * TGLCommandList::Add(GLenum method, bool *visible)
 {
-    LB_RENDER_COMMAND * r = RCM_APPEND(LB_RENDER_COMMAND, &list, 1);
+    LB_RENDER_COMMAND * r = SVEC_APPEND(LB_RENDER_COMMAND, &list, 1);
     memset(r, 0, sizeof(LB_RENDER_COMMAND));
     r->command = method;
     r->visible = visible;
@@ -1812,7 +1813,7 @@ LB_RENDER_COMMAND * TGLCommandList::Add(GLenum method, LB_TYPE type, int count, 
     LB_RENDER_COMMAND * r = Add(method, visible);
     r->type = gltype;
     r->count = count;
-    rcm_set_length((void**)(&(r->indice)), count, LB_TYPE_ELEMSIZE(type));
+    svec_set_length((void**)(&(r->indice)), count, LB_TYPE_ELEMSIZE(type));
     return r;
 }
 LB_RENDER_COMMAND * TGLCommandList::Add(GLenum method, GLuint indice_buffer_id, GLenum elem_type,  int count, bool *visible)
@@ -1823,23 +1824,23 @@ LB_RENDER_COMMAND * TGLCommandList::Add(GLenum method, GLuint indice_buffer_id, 
     r->count = count;
     return r;
 }
-LB_RENDER_COMMAND * TGLCommandList::Add(GLenum method, const uint16_t *indice, int count, bool *visible)
+LB_RENDER_COMMAND * TGLCommandList::Add(GLenum method, const u16_t *indice, int count, bool *visible)
 {
     LB_RENDER_COMMAND * r = Add(method, visible);
-    rcm_set_length(&(r->indice), count, sizeof(uint16_t));
+    svec_set_length(&(r->indice), count, sizeof(u16_t));
     if (indice) {
-        copy_memory(r->indice, indice, sizeof(uint16_t) * count);
+        copy_memory(r->indice, indice, sizeof(u16_t) * count);
     }
     r->type = GL_UNSIGNED_SHORT;
     r->count = count;
     return r;
 }
-LB_RENDER_COMMAND * TGLCommandList::Add(GLenum method, const uint8_t *indice, int count, bool *visible)
+LB_RENDER_COMMAND * TGLCommandList::Add(GLenum method, const u8_t *indice, int count, bool *visible)
 {
     LB_RENDER_COMMAND * r = Add(method, visible);
-    rcm_set_length(&(r->indice), count, sizeof(uint8_t));
+    svec_set_length(&(r->indice), count, sizeof(u8_t));
     if (indice) {
-        copy_memory(r->indice, indice, sizeof(int32_t) * count);
+        copy_memory(r->indice, indice, sizeof(i32_t) * count);
     }
     r->type = GL_UNSIGNED_BYTE;
     r->count = count;
@@ -1867,11 +1868,11 @@ int DrawCommandList(TGLCommandList *list)
         if (c->visible && *(c->visible) != true) {
             continue;
         }
-        GL_ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->buffer_id));
+        GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->buffer_id));
         if (c->buffer_id == 0 && c->indice == NULL) {
-            GL_ASSERT(glDrawArrays(c->command, c->first, c->count));
+            GL_CHECK(glDrawArrays(c->command, c->first, c->count));
         } else {
-            GL_ASSERT(glDrawElements(c->command, (c->indice) ? rcm_length(c->indice) : c->count, c->type, c->indice));
+            GL_CHECK(glDrawElements(c->command, (c->indice) ? svec_length(c->indice) : c->count, c->type, c->indice));
         }
     }
     if (list->ab) {
@@ -1908,7 +1909,7 @@ void TGLDrawList::ClearCommandList(void) {
     modified = true;
 }
 //---------------------------------------------------------------------------
-void TGLDrawList::FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, uint32_t color)
+void TGLDrawList::FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, u32_t color)
 {
     int cnt = glyph->FillVertexList(&(dst->vtx), area, sizeof(V2CT));
     // TexCoord와 Color를 채우고
@@ -1917,18 +1918,18 @@ void TGLDrawList::FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, uint32_t c
         dst[i].col = color;
     }
 /*
-    uint16_t *idx = new uint16_t[icnt];
+    u16_t *idx = new u16_t[icnt];
     for (int i = 0; i < icnt; i++) {
         idx[i] = base + indice[i];
     }
 */	modified = true;
 }
 //---------------------------------------------------------------------------
-int TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, uint32_t color)
+int TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)
 {
     int cnt, icnt, base;
-    const uint8_t *indice = glyph->GetDrawIndice(&icnt);
-    base = rcm_length(bf.GetLocalData());
+    const u8_t *indice = glyph->GetDrawIndice(&icnt);
+    base = svec_length(bf.GetLocalData());
     cnt = glyph->GetVertexCount();
     V2CT *v = (V2CT*)bf.AppendLocalData(cnt, sizeof(V2CT)); // 버퍼 크기를 늘리고
     // Vertex정보를 채우고
@@ -1938,7 +1939,7 @@ int TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, uint32_t color)
         v[i].txc = glyph->GetTexCoords()[i];
         v[i].col = color;
     }
-    uint16_t *idx = new uint16_t[icnt];
+    u16_t *idx = new u16_t[icnt];
     for (int i = 0; i < icnt; i++) {
         idx[i] = base + indice[i];
     }
@@ -1948,10 +1949,10 @@ int TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, uint32_t color)
     return 1;
 }
 //---------------------------------------------------------------------------
-int TGLDrawList::AddLines(vec2_f32 *lines_vertice, int line_count, uint32_t color)
+int TGLDrawList::AddLines(vec2_f32 *lines_vertice, int line_count, u32_t color)
 {
     int vtx_count = line_count * 2;
-    int base = rcm_length(bf.GetLocalData());
+    int base = svec_length(bf.GetLocalData());
     V2CT *v = (V2CT*)bf.AppendLocalData(vtx_count, sizeof(V2CT)); // 버퍼 크기를 늘리고
     vec2_f32 txc = vec2_f32_(1.0f / 1024.0f, 1.0f / 1024.0f);
     for (int i = 0; i < vtx_count; i++) {
@@ -1961,7 +1962,7 @@ int TGLDrawList::AddLines(vec2_f32 *lines_vertice, int line_count, uint32_t colo
     }
     cl.AddArrays(GL_LINES, base, vtx_count);
 /*
-    uint16_t *idx = new uint16_t[vtx_count];
+    u16_t *idx = new u16_t[vtx_count];
     for (int i = 0; i < vtx_count; i++) {
         idx[i] = base + i;
     }
@@ -2048,8 +2049,8 @@ GLuint TGLFrameBufferObject::GetHandle(void)
 
         glGenRenderbuffers(1, &depth);
         glBindRenderbuffer(GL_RENDERBUFFER, depth);
-        GL_ASSERT(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, sz.width, sz.height));
-        GL_ASSERT(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
+        GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, sz.width, sz.height));
+        GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
 
         if (tex == NULL) {
             tex = new TGLTexture2D();
@@ -2057,21 +2058,21 @@ GLuint TGLFrameBufferObject::GetHandle(void)
 
 //		glGenTextures(1, &tex);
 //		glBindTexture(GL_TEXTURE_2D, tex);
-//		GL_ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+//		GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
 
         tex->Bind();
-        GL_ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-        GL_ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        GL_ASSERT(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sz.width, sz.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
-        GL_ASSERT(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->GetHandle(), 0)); // 마지막은 mipmap 레벨임
+        GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sz.width, sz.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
+        GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->GetHandle(), 0)); // 마지막은 mipmap 레벨임
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
 /*
-        uint32_t *buf = new uint32_t[1280*720];
+        u32_t *buf = new u32_t[1280*720];
         for (int i = 0; i < 1280*720; i++) {
             buf[i] = 0xff00ffff;
         }
-        GL_ASSERT(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 720, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf));
+        GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 720, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf));
         delete [] buf;
 */
         if (n_fbo != handle) {
