@@ -91,10 +91,11 @@ LBX_GL_EXPORT const char * lbeglGetErrorStr(EGLint error_code);
 } while (0)
 
 #define GL_CHECK(...) do { \
+    GLint _err; \
     __VA_ARGS__; \
     _err = glGetError(); \
     if (_err != GL_NO_ERROR) { \
-        Err_("GL_CHECK(" #aaa ") failed: %s", lbglGetErrorStr(_err)); \
+        Err_("GL_CHECK(" #__VA_ARGS__ ") failed: %s", lbglGetErrorStr(_err)); \
     } \
 } while (0)
 

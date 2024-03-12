@@ -104,15 +104,15 @@ public:
         sfCompiled = 1,
     };
     TGLShader(GLenum type);
-    TGLShader(GLenum type, lbxSTREAM *strm);
+    TGLShader(GLenum type, LBX_STREAM *strm);
     TGLShader(GLenum type, const char *code, const char *hdr = NULL);
     TGLShader(GLenum type, const char *code, int code_len, const char *hdr = NULL, int hdr_len = -1);
     virtual ~TGLShader();
     int SetSource(const char *code, const char *hdr = NULL);
     int SetSource(const char *code, int code_len, const char *hdr = NULL, int hdr_len = -1);
     int SetSource(GLint count, const char **codes, const GLint *lengths = NULL);
-    int SetSource(lbxSTREAM *strm);
-    int SetBinary(lbxSTREAM *strm);
+    int SetSource(LBX_STREAM *strm);
+    int SetBinary(LBX_STREAM *strm);
     int Load(const void *data, GLsizei length, GLenum binaryformat);
 
     inline GLint GetSourceLength(void) {return GetIntParam(GL_SHADER_SOURCE_LENGTH);}
@@ -132,7 +132,7 @@ class TGLVertexShader : public TGLShader
 protected:
 public:
     TGLVertexShader();
-    TGLVertexShader(lbxSTREAM *strm);
+    TGLVertexShader(LBX_STREAM *strm);
     TGLVertexShader(const char *code, GLint length = -1);
     TGLVertexShader(const char *hdr, const char *body);
     virtual ~TGLVertexShader();
@@ -144,7 +144,7 @@ class TGLFragmentShader : public TGLShader
 protected:
 public:
     TGLFragmentShader();
-    TGLFragmentShader(lbxSTREAM *strm);
+    TGLFragmentShader(LBX_STREAM *strm);
     TGLFragmentShader(const char *code, GLint length = -1);
     TGLFragmentShader(const char *hdr, const char *body);
     virtual ~TGLFragmentShader();
@@ -228,9 +228,9 @@ public:
     int Build(const char *vshader, TGLFragmentShader *fshader, const char *hdr = NULL);
 
     int LoadFromFile(const char *file_name, GLenum bin_format);
-    int LoadFromStream(lbxSTREAM *s, int length, GLenum bin_format);
+    int LoadFromStream(LBX_STREAM *s, int length, GLenum bin_format);
     int SaveToFile(const char *file_name);
-    int SaveToStream(lbxSTREAM *s);
+    int SaveToStream(LBX_STREAM *s);
     int SaveToMem(void **rcm);
 
     int LoadBinary(const void *data, int length, GLenum bin_format);
@@ -308,7 +308,7 @@ private:
     typedef TGLObject inherited;
 protected:
     int LoadFromFile(const char *file_name, int target = -1);
-    int LoadFromStream(lbxSTREAM *s, int target = -1);
+    int LoadFromStream(LBX_STREAM *s, int target = -1);
 
     int Load(LBX_IMAGE *img);
 
@@ -332,7 +332,7 @@ public:
 
     virtual int SetImage(const LBX_IMAGE *img, int target);
     inline int LoadFromFile(const char *file_name, int target) {return inherited::LoadFromFile(file_name, target);}
-    inline int LoadFromStream(lbxSTREAM *s, int target) {return inherited::LoadFromStream(s, target);}
+    inline int LoadFromStream(LBX_STREAM *s, int target) {return inherited::LoadFromStream(s, target);}
 
     inline void Bind(void) {glBindTexture(GL_TEXTURE_CUBE_MAP, GetHandle());}
 
@@ -349,7 +349,7 @@ public:
 
     virtual int SetImage(const LBX_IMAGE *img, int target = -1);
     inline int LoadFromFile(const char *file_name) {return inherited::LoadFromFile(file_name, GL_TEXTURE_2D);}
-    inline int LoadFromStream(lbxSTREAM *s) {return inherited::LoadFromStream(s, GL_TEXTURE_2D);}
+    inline int LoadFromStream(LBX_STREAM *s) {return inherited::LoadFromStream(s, GL_TEXTURE_2D);}
 
     inline void Bind(void) {glBindTexture(GL_TEXTURE_2D, GetHandle());}
 };
@@ -491,7 +491,7 @@ public:
 
 //	SetTypeInfo(const LB_REFL_STRUCT_INFO *typeinfo);
 
-    int Register(const lbxREFL_STRUCT_INFO *rtti);
+    int Register(const LBX_REFL_STRUCT_INFO *rtti);
     TGLAttribBuffer & Register(char attrib_type, LB_TYPE data_type, u16_t offset);
 
     int BindTo(TGLProgram *program, int elem_size);
@@ -558,7 +558,7 @@ protected:
 public:
     TGLAttribBinder();
     TGLAttribBinder(TGLProgram *program, TGLAttribBuffer *buffer);
-    TGLAttribBinder(TGLProgram *program, const lbxREFL_STRUCT_INFO *typeinfo);
+    TGLAttribBinder(TGLProgram *program, const LBX_REFL_STRUCT_INFO *typeinfo);
     ~TGLAttribBinder();
 
     inline int GetBufferInfoCount(void) {return svec_length(bi);}
@@ -580,7 +580,7 @@ public:
 
     int AddBinding(GLint attrib_loc, GLint comp_count, GLenum comp_type, GLboolean normalize, GLint stride, GLint buffer_id, GLint offset);
     int AddBinding(GLint attrib_loc, GLint comp_count, GLenum comp_type, GLboolean normalize, GLint stride, void * pointer);
-    int AddBinding(GLint attrib_loc, const lbxREFL_STRUCT_INFO *ti, const char *member_name, GLboolean normalize);
+    int AddBinding(GLint attrib_loc, const LBX_REFL_STRUCT_INFO *ti, const char *member_name, GLboolean normalize);
     int AddBinding(const LB_BUFFER_INFO *bind_info);
 
 
@@ -592,7 +592,7 @@ public:
 //		return AddBinding(p->GetAttribLocation(attrib_name), comp_type, comp_count, stride, offset, normalize);
 //	}
 
-    inline int AddBinding(const char *attrib_name, const lbxREFL_STRUCT_INFO *ti, const char *member_name, GLboolean normalize = false) {
+    inline int AddBinding(const char *attrib_name, const LBX_REFL_STRUCT_INFO *ti, const char *member_name, GLboolean normalize = false) {
         return AddBinding(p->GetAttribLocation(attrib_name), ti, member_name, normalize);
     }
 //	inline int AddBinding_vec4_f32(const char *attrib_name, GLint stride = sizeof(vec4_f32), GLint offset = 0, GLboolean normalize = false) {

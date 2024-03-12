@@ -58,14 +58,14 @@ TLBTexture::~TLBTexture()
 int TLBTexture::LoadFromFile(const char *file_name, int target)
 {
     int ret = 0;
-    lbxSTREAM st = {0,};
+    LBX_STREAM st = {0,};
     stream_open_file(&st, file_name, "rb");
     ret = LoadFromStream(&st, target);
     stream_close(&st);
     return ret;
 }
 //---------------------------------------------------------------------------
-int TLBTexture::LoadFromStream(lbxSTREAM *s, int target)
+int TLBTexture::LoadFromStream(LBX_STREAM *s, int target)
 {
     int ret = 0;
 /*
@@ -466,7 +466,7 @@ TGLShader::TGLShader(GLenum type)
 */
 }
 //---------------------------------------------------------------------------
-TGLShader::TGLShader(GLenum type, lbxSTREAM *strm)
+TGLShader::TGLShader(GLenum type, LBX_STREAM *strm)
 {
     CreateGLObject(type);
     SetSource(strm);
@@ -516,7 +516,7 @@ int TGLShader::Load(const void *data, int length, GLenum binaryformat)
     }
 }
 //---------------------------------------------------------------------------
-int TGLShader::SetBinary(lbxSTREAM *strm)
+int TGLShader::SetBinary(LBX_STREAM *strm)
 {
     int ret;
     u8_t *b = NULL;
@@ -599,7 +599,7 @@ int TGLShader::SetSource(const char *code, int code_len, const char *hdr, int hd
     return SetSource(1, s, l);
 }
 //---------------------------------------------------------------------------
-int TGLShader::SetSource(lbxSTREAM *strm)
+int TGLShader::SetSource(LBX_STREAM *strm)
 {
     UString code;
     int l = (int)stream_get_size(strm);
@@ -623,7 +623,7 @@ TGLVertexShader::TGLVertexShader()
 
 }
 //---------------------------------------------------------------------------
-TGLVertexShader::TGLVertexShader(lbxSTREAM *strm)
+TGLVertexShader::TGLVertexShader(LBX_STREAM *strm)
     : TGLShader(GL_VERTEX_SHADER, strm)
 {
 
@@ -654,7 +654,7 @@ TGLFragmentShader::TGLFragmentShader()
 
 }
 //---------------------------------------------------------------------------
-TGLFragmentShader::TGLFragmentShader(lbxSTREAM *strm)
+TGLFragmentShader::TGLFragmentShader(LBX_STREAM *strm)
     : TGLShader(GL_FRAGMENT_SHADER, strm)
 {
 
@@ -800,13 +800,13 @@ int TGLProgram::GetIntParam(GLenum pname)
 //---------------------------------------------------------------------------
 int TGLProgram::LoadFromFile(const char *file_name, GLenum bin_format)
 {
-    lbxSTREAM *s = new_file_stream(file_name, "rb");
+    LBX_STREAM *s = new_file_stream(file_name, "rb");
     int r = LoadFromStream(s, (int)stream_get_size(s), bin_format);
     delete_stream(s);
     return r;
 }
 //---------------------------------------------------------------------------
-int TGLProgram::LoadFromStream(lbxSTREAM *s, int length, GLenum bin_format)
+int TGLProgram::LoadFromStream(LBX_STREAM *s, int length, GLenum bin_format)
 {
     void * buf = alloc_memory(length);
     stream_read(s, buf, length);
@@ -868,13 +868,13 @@ int TGLProgram::SaveToMem(void **rcm)
 //---------------------------------------------------------------------------
 int TGLProgram::SaveToFile(const char *file_name)
 {
-    lbxSTREAM *s = new_file_stream(file_name, "wb");
+    LBX_STREAM *s = new_file_stream(file_name, "wb");
     int r = SaveToStream(s);
     delete_stream(s);
     return r;
 }
 //---------------------------------------------------------------------------
-int TGLProgram::SaveToStream(lbxSTREAM *s)
+int TGLProgram::SaveToStream(LBX_STREAM *s)
 {
     void *buf = NULL;
     SaveToMem(&buf);
@@ -941,7 +941,7 @@ int TGLProgram::Build(const char *vshader, const char *fshader, const char *hdr)
 }
 //---------------------------------------------------------------------------
 
-
+/*
 const UString g_POSITION    = "position";
 const UString g_NORMAL      = "normal";
 const UString g_TANGENT     = "tangent";
@@ -949,6 +949,7 @@ const UString g_TEXCOORD    = "texcoord";
 const UString g_COLOR       = "color";
 const UString g_JOINT       = "joint";
 const UString g_WEIGHT       = "weight";
+*/
 
 //---------------------------------------------------------------------------
 u8_t EstimateAttribTypeFromName(const char *param_name, int l)
@@ -1447,11 +1448,11 @@ TGLAttribBuffer & TGLAttribBuffer::Register(char attrib_type, LB_TYPE data_type,
     return *this;
 }
 
-int TGLAttribBuffer::Register(const lbxREFL_STRUCT_INFO *rtti)
+int TGLAttribBuffer::Register(const LBX_REFL_STRUCT_INFO *rtti)
 {
     SVEC_FREE(&bd);
-    lbxREFL_MEMBER_ITERATOR it = refl_get_member_iterator(rtti);
-    const lbxREFL_MEMBER_INFO *mi;
+    LBX_REFL_MEMBER_ITERATOR it = refl_get_member_iterator(rtti);
+    const LBX_REFL_MEMBER_INFO *mi;
     int r = 0;
     while ((mi = refl_next_member(&it)) != NULL) {
         u8_t attrib_type = EstimateAttribTypeFromName(mi->id);
@@ -1555,7 +1556,7 @@ TGLAttribBinder::TGLAttribBinder(TGLProgram *program, TGLAttribBuffer *buffer)
 {
 }
 //---------------------------------------------------------------------------
-TGLAttribBinder::TGLAttribBinder(TGLProgram *program, const lbxREFL_STRUCT_INFO *typeinfo)
+TGLAttribBinder::TGLAttribBinder(TGLProgram *program, const LBX_REFL_STRUCT_INFO *typeinfo)
     : p(program), bi(NULL)
 {
 
@@ -1692,7 +1693,7 @@ LB_ATTRIB_BINDING * TGLAttribBinder::AddBinding(GLint attrib_loc, LB_TYPE type, 
     return r;
 }
 
-int TGLAttribBinder::AddBinding(GLint attrib_loc, const lbxREFL_STRUCT_INFO *ti, const char *member_name, GLboolean normalize)
+int TGLAttribBinder::AddBinding(GLint attrib_loc, const LBX_REFL_STRUCT_INFO *ti, const char *member_name, GLboolean normalize)
 {
 
     return 1;
