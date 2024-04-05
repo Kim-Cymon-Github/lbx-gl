@@ -26,6 +26,9 @@
     #endif //#elif GLES >= 30 #if GLES == 20
 #endif
 
+#ifdef _WIN32
+static NativeDisplayType g_desktop_dc = 0;
+#endif //#ifdef _WIN32
 
 i32_t gles_instances = 0;
 
@@ -41,6 +44,12 @@ const LBGL_CODE_DESC glerrorstrings[] = {
     {GL_INVALID_OPERATION, "GL_INVALID_OPERATION"},
     {GL_INVALID_FRAMEBUFFER_OPERATION, "GL_INVALID_FRAMEBUFFER_OPERATION"},
     {GL_OUT_OF_MEMORY, "GL_OUT_OF_MEMORY"},
+#ifdef GL_STACK_UNDERFLOW
+	{GL_STACK_UNDERFLOW, "GL_STACK_UNDERFLOW"},
+#endif //#ifdef GL_STACK_UNDERFLOW
+#ifdef GL_STACK_OVERFLOW
+	{GL_STACK_OVERFLOW, "GL_STACK_OVERFLOW"},
+#endif //#ifdef GL_STACK_OVERFLOW
 };
 
 typedef struct {
@@ -91,7 +100,7 @@ const char * lbeglGetErrorStr(EGLint error_code)
     return ret;
 }
 
-void LBX_RENDER_CONTEXT_init(LBX_RENDER_CONTEXT* self, EGLNativeWindowType native_window)
+void LBX_RENDER_CONTEXT_Init(LBX_RENDER_CONTEXT* self, EGLNativeWindowType native_window)
 { 
     self->native_window = native_window;
     self->native_display = EGL_DEFAULT_DISPLAY;
@@ -112,7 +121,7 @@ static void * lbglSetWindowStyles(NativeWindowType h_wnd)
 }
 */
 
-int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const * attribList)
+int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const * attrib_list)
 {
     EGLint selected_config = -1;
     EGLint numConfigs = 0;
@@ -156,7 +165,7 @@ int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const *
     Log_("Initializing OpenGL ES %d.%d", GLES/10, GLES%10);
 #endif //ifdef GLES
 
-    Log_("  native_window=0x%X, display=0x%X", native_window, native_display );
+    // Log_("  native_window=0x%X, display=0x%X", native_window, native_display );
 
     if (ctx == NULL) {
         Err_("ctx cannot be NULL");
@@ -166,10 +175,15 @@ int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const *
     if (ctx->egl_display == EGL_NO_DISPLAY) {
         // 외부에서 egl_display를 제공하지 않았으므로 기본적인 방법으로 취득을 시도한다.
 #ifdef _WIN32
-        ctx->native_display = GetDC(NULL); // 멀티윈도우 지원을 위해 native_window를 사용하지 않고 Desktop window를 사용함
-        if (NULL == ctx->native_display) {
-            Err_("GetDC(NULL) failed");
-            return EGL_BAD_DISPLAY;
+		if (g_desktop_dc == 0) {
+			g_desktop_dc = GetDC(NULL);
+            if (NULL == g_desktop_dc) {
+                Err_("GetDC(NULL) failed");
+                return EGL_BAD_DISPLAY;
+            }
+        }
+		if (EGL_DEFAULT_DISPLAY == ctx->native_display) { // 별도로 native_display를 지정하지 않았으면
+        	ctx->native_display = g_desktop_dc; // 멀티윈도우 지원을 위해 EGL_DEFAULT_DISPLAY를 사용하지 않고 Desktop window를 사용함
         }
 #endif //#ifdef _WIN32
         ctx->egl_display = eglGetDisplay(ctx->native_display);
@@ -206,12 +220,12 @@ int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const *
 
         if (err == EGL_SUCCESS) {
             // Choose config
-            if (NULL == attribList) {
+            if (NULL == attrib_list) {
                 // 기본 설정 사용
-                attribList = default_egl_config_attribs;
+                attrib_list = default_egl_config_attribs;
             }
 
-            if (EGL_FALSE == eglChooseConfig(ctx->egl_display, attribList, configs, numConfigs, &numConfigs)) {
+            if (EGL_FALSE == eglChooseConfig(ctx->egl_display, attrib_list, configs, numConfigs, &numConfigs)) {
                 err = eglGetError();
                 Err_("eglChooseConfig failed: %s", lbeglGetErrorStr(err));
             } else {
@@ -225,7 +239,7 @@ int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const *
                 ctx->egl_surface = eglCreateWindowSurface(ctx->egl_display, configs[selected_config], ctx->native_window, NULL);
                 err = eglGetError();
                 if (EGL_NO_SURFACE != ctx->egl_surface) {
-                    Log_("EGL surface %p created based on EGLConfig %d (idx=%d)", surface, configs[selected_config], selected_config);
+                    Log_("EGL surface %p created based on EGLConfig %d (idx=%d)", ctx->egl_surface, configs[selected_config], selected_config);
                     break;
                 } else {
                     Log_("  EGLConfig %d failed - %s", selected_config, lbeglGetErrorStr(err));
@@ -241,7 +255,7 @@ int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const *
         if (err == EGL_SUCCESS && configs) {
             ctx->egl_context = eglCreateContext(ctx->egl_display, configs[selected_config], context_to_share, contextAttribs);
             if (EGL_NO_CONTEXT != ctx->egl_context) {
-                Log_("EGL context created: 0x%x", context);
+                Log_("EGL context created: 0x%x", ctx->egl_context);
             } else {
                 err = eglGetError();
                 Err_("eglCreateContext failed: %s", lbeglGetErrorStr(err));
@@ -318,7 +332,9 @@ int RC_Free(LBX_RENDER_CONTEXT *ctx)
         }
 
 #ifdef _WIN32
-        ReleaseDC(NULL, ctx->native_display);
+		if (g_desktop_dc != 0) {
+    		ReleaseDC(NULL, g_desktop_dc);
+		}
 #endif //#ifdef _WIN32
     }
 

@@ -70,10 +70,10 @@ typedef struct  {
     EGLContext           egl_context;
     EGLSurface           egl_surface;
 } LBX_RENDER_CONTEXT;
-LBX_GL_EXPORT void LBX_RENDER_CONTEXT_init(LBX_RENDER_CONTEXT* self, EGLNativeWindowType native_window);
+LBX_GL_EXPORT void LBX_RENDER_CONTEXT_Init(LBX_RENDER_CONTEXT* self, EGLNativeWindowType native_window);
 
-LBX_GL_EXPORT int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const  * attribList);
-LBX_GL_EXPORT int RC_Free(LBX_RENDER_CONTEXT *ctx);
+LBX_GL_EXPORT i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const  * attrib_list);
+LBX_GL_EXPORT i32_t RC_Free(LBX_RENDER_CONTEXT *ctx);
 
 lbx_inline bool RC_MakeCurrent(const LBX_RENDER_CONTEXT* ctx) { return eglGetCurrentContext() == ctx->egl_context ? true : (bool)eglMakeCurrent(ctx->egl_display, ctx->egl_surface, ctx->egl_surface, ctx->egl_context); }
 lbx_inline bool RC_SwapBuffers(const LBX_RENDER_CONTEXT *ctx) { return (bool)eglSwapBuffers(ctx->egl_display, ctx->egl_surface);}
@@ -110,3 +110,20 @@ LBX_GL_EXPORT const char * lbeglGetErrorStr(EGLint error_code);
 }
 #endif //#ifdef __cplusplus
 #endif
+
+
+#ifdef __cplusplus
+#ifndef lbx_glHPP
+#define lbx_glHPP
+
+class LbxRenderContext : public LBX_RENDER_CONTEXT
+{
+public:
+    inline LbxRenderContext(EGLNativeWindowType native_window) { LBX_RENDER_CONTEXT_Init(this, native_window); }
+    inline LbxRenderContext() { LBX_RENDER_CONTEXT_Init(this, NULL); }
+    inline ~LbxRenderContext() { RC_Free(this); }
+    inline i32_t Init(EGLContext context_to_share = NULL, EGLint const* attrib_list = NULL) { return RC_Init(this, context_to_share, attrib_list); }
+};
+
+#endif //#ifndef lbx_glHPP
+#endif //#ifdef __cplusplus
