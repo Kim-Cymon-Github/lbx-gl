@@ -21,12 +21,12 @@
     <ClInclude Include="..\..\..\src\lbx_gl.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\version.h">
+    <ClInclude Include="..\..\src\version.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\dllmain.cpp">
+    <ClCompile Include="..\..\src\dllmain.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\lbx_gl.c">

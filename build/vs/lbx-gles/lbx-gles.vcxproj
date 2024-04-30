@@ -112,7 +112,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\version.h</Command>
+      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\src\version.h</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -141,7 +141,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\version.h</Command>
+      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\src\version.h</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -166,7 +166,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\version.h</Command>
+      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\src\version.h</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -195,16 +195,16 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\version.h</Command>
+      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\src\version.h</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\lbx_gl.h" />
     <ClInclude Include="..\..\..\src\lbx_gles2.h" />
-    <ClInclude Include="..\..\version.h" />
+    <ClInclude Include="..\..\src\version.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\dllmain.cpp" />
+    <ClCompile Include="..\..\src\dllmain.cpp" />
     <ClCompile Include="..\..\..\src\lbx_gl.c" />
     <ClCompile Include="..\..\..\src\lbx_gles2.cpp" />
   </ItemGroup>

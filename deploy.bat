@@ -2,18 +2,18 @@
 chcp 65001
 
 rem 전달된 파일이 존재하는지 확인합니다.
-set "FILE_NAME=build\version.h"
-if exist "%FILE_NAME%" (
-    for /f "tokens=3" %%i in ('findstr /C:"define VERSION_MAJOR" "%FILE_NAME%"') do (
+set "VERSION_FILE=build\src\version.h"
+if exist "%VERSION_FILE%" (
+    for /f "tokens=3" %%i in ('findstr /C:"define VERSION_MAJOR" "%VERSION_FILE%"') do (
         set "VERSION_MAJOR=%%i"
     )
-    for /f "tokens=3" %%i in ('findstr /C:"define VERSION_MINOR" "%FILE_NAME%"') do (
+    for /f "tokens=3" %%i in ('findstr /C:"define VERSION_MINOR" "%VERSION_FILE%"') do (
         set "VERSION_MINOR=%%i"
     )
-    for /f "tokens=3" %%i in ('findstr /C:"define VERSION_PATCH" "%FILE_NAME%"') do (
+    for /f "tokens=3" %%i in ('findstr /C:"define VERSION_PATCH" "%VERSION_FILE%"') do (
         set "VERSION_PATCH=%%i"
     )
-    for /f "tokens=3" %%i in ('findstr /C:"define BUILD_NUMBER" "%FILE_NAME%"') do (
+    for /f "tokens=3" %%i in ('findstr /C:"define BUILD_NUMBER" "%VERSION_FILE%"') do (
         set "BUILD_NUMBER=%%i"
     )
 )
@@ -34,4 +34,4 @@ git commit -m "%commit_message%"
 git push
 )
 popd
-lib\lbx\tools\inc VERSION_PATCH build\version.h
+lib\lbx\tools\inc VERSION_PATCH "%VERSION_FILE%"

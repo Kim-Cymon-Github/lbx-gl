@@ -31,16 +31,28 @@
 *.out
 *.app
 
+# VS Intermediate files
+*.exp
+*.pdb
+*.bsc
+*.user
+Win32
+x64
+.vs
+
+# C++ Builder files
 __history
 __recovery
 __astcache
 *.cbproj.local
-
-*.user
-Win32
 Win64
-x64
 
-.vs
+# Doxygen files
 doc/html
 doc/latex
+
+# Cmake files
+build/cmake
+
+# Backup files
+*.bak
