@@ -1,6 +1,10 @@
 ﻿// dllmain.cpp : DLL 애플리케이션의 진입점을 정의합니다.
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN 
 #include <windows.h>
+#ifdef __BORLANDC__
 #pragma hdrstop
+#endif //#ifdef __BORLANDC__
 #pragma comment (lib, "lbx-core")
 
 BOOL APIENTRY DllMain( HMODULE hModule,
