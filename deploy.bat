@@ -31,9 +31,9 @@ if exist "%VERSION_FILE%" (
 set "COMMIT_MESSAGE=%MODULE_NAME% %VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH% build %BUILD_NUMBER% 배포"
 
 if not exist "lib\lbx\include\%SUB_DIR%\"       mkdir "lib\lbx\include\%SUB_DIR%\"
-attrib -R "lib\lbx\include\%SUB_DIR%\*.h"
+attrib /S -R "lib\lbx\include\*"
 copy src\*.h "lib\lbx\include\%SUB_DIR%\"
-attrib +R "lib\lbx\include\%SUB_DIR%\*.h"
+attrib /S +R "lib\lbx\include\*"
 
 pushd lib\lbx
 git pull
