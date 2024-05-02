@@ -4,7 +4,7 @@
 #define lbx_glH
 //---------------------------------------------------------------------------
 
-#include "lbx.h"
+#include "lbx_type.h"
 
 #define GLES_3_2
 

@@ -8,7 +8,7 @@
 
 #include "lbx_gles_test_routines.h"
 
-#pragma comment (lib, "lbx-gles.lib")
+#pragma comment (lib, "lbx-gl.lib")
 #pragma comment (lib, "lbx-core.lib")
 
 i32_t main(void)
@@ -22,7 +22,7 @@ i32_t main(void)
 
     test();
 
-    Log_("lbx-gles library function test");
+    Log_("lbx-gl library function test");
 
     check_memory_usage(true); // reset
 }

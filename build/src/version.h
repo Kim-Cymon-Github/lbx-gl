@@ -1,5 +1,5 @@
 ﻿/** 
- * lbx-gles version 정보
+ * lbx-gl version 정보
  * .h파일에서 함부로 include하지 말 것
  */
 #ifndef version_H 
@@ -7,7 +7,7 @@
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
-#define VERSION_PATCH 7
-#define BUILD_NUMBER 9
+#define VERSION_PATCH 8
+#define BUILD_NUMBER 10
 
 #endif //#ifndef version_H
