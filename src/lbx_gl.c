@@ -20,9 +20,9 @@
         #pragma comment (lib, "libGLESv2")  // 이유는 알 수 없으나 직접 프로젝트에 추가해야 정상 동작함
     #endif //#ifdef IS_WINDOWS
     #if GLES == 20
-        #define LB_RENDERABLE_TYPE EGL_OPENGL_ES2_BIT
+        #define LBX_RENDERABLE_TYPE EGL_OPENGL_ES2_BIT
     #elif GLES >= 30 //#if GLES == 20
-        #define LB_RENDERABLE_TYPE EGL_OPENGL_ES3_BIT
+        #define LBX_RENDERABLE_TYPE EGL_OPENGL_ES3_BIT
     #endif //#elif GLES >= 30 #if GLES == 20
 #endif
 
@@ -78,7 +78,7 @@ const LBEGL_CODE_DESC eglerrorstrings[] = {
 const char * lbglGetErrorStr(GLenum error_code)
 {
     const char *ret = NULL;
-    int i;
+    i32_t i;
     for (i = sizeof(glerrorstrings) / sizeof(LBGL_CODE_DESC) - 1; i >= 0; --i) {
         if (glerrorstrings[i].code == error_code) {
             ret = glerrorstrings[i].desc;
@@ -90,7 +90,7 @@ const char * lbglGetErrorStr(GLenum error_code)
 const char * lbeglGetErrorStr(EGLint error_code)
 {
     const char *ret = NULL;
-    int i;
+    i32_t i;
     for (i = sizeof(eglerrorstrings) / sizeof(LBGL_CODE_DESC) - 1; i >= 0; --i) {
         if (eglerrorstrings[i].code == error_code) {
             ret = eglerrorstrings[i].desc;
@@ -121,7 +121,7 @@ static void * lbglSetWindowStyles(NativeWindowType h_wnd)
 }
 */
 
-int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const * attrib_list)
+i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const * attrib_list)
 {
     EGLint selected_config = -1;
     EGLint numConfigs = 0;
@@ -136,7 +136,7 @@ int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const *
         EGL_BLUE_SIZE,               8,
         EGL_ALPHA_SIZE,              8,
         EGL_COLOR_BUFFER_TYPE,       EGL_RGB_BUFFER,
-        EGL_RENDERABLE_TYPE,         LB_RENDERABLE_TYPE,     //
+        EGL_RENDERABLE_TYPE,         LBX_RENDERABLE_TYPE,     //
 //		EGL_CONFIG_CAVEAT,           EGL_DONT_CARE,
 //		EGL_CONFIG_ID,               EGL_DONT_CARE,
 
@@ -299,9 +299,9 @@ int RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const *
 }
 
 
-int RC_Free(LBX_RENDER_CONTEXT *ctx)
+i32_t RC_Free(LBX_RENDER_CONTEXT *ctx)
 {
-    int ret = 0;
+    i32_t ret = 0;
 //	if (EGL_NO_DISPLAY != ctx->egl_display) {
 //		if (!RC_MakeCurrent(ctx)) {
 //			Err_("eglMakeCurrent failed");

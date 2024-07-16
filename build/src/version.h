@@ -7,7 +7,7 @@
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
-#define VERSION_PATCH 9
-#define BUILD_NUMBER 12
+#define VERSION_PATCH 17
+#define BUILD_NUMBER 31
 
 #endif //#ifndef version_H
