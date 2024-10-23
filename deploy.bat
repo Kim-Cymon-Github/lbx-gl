@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001
 @echo off
 cls
@@ -12,7 +12,7 @@ set "SUB_DIR=%MODULE_NAME:*lbx-=%%"
 
 echo ### Deploying %MODULE_NAME% ... (SubDir: %SUB_DIR%)
 rem 전달된 파일이 존재하는지 확인합니다.
-set "VERSION_FILE=build\src\version.h"
+set "VERSION_FILE=src\version.txt"
 if exist "%VERSION_FILE%" (
     for /f "tokens=3" %%i in ('findstr /C:"define VERSION_MAJOR" "%VERSION_FILE%"') do (
         set "VERSION_MAJOR=%%i"

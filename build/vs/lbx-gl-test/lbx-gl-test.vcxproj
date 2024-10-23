@@ -143,10 +143,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\lbx_gles_test_main.cpp" />
+    <ClCompile Include="..\..\..\test\lbx_gles_test_main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\lbx_gles_test_routines.h" />
+    <ClInclude Include="..\..\..\test\lbx_gles_test_routines.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

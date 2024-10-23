@@ -1814,7 +1814,7 @@ LBX_RENDER_COMMAND * TGLCommandList::Add(GLenum method, LBX_TYPE type, i32_t cou
     LBX_RENDER_COMMAND * r = Add(method, visible);
     r->type = gltype;
     r->count = count;
-    svec_set_length((void**)(&(r->indice)), count, LBX_TYPE_ELEMSIZE(type));
+    svec_set_length((void**)(&(r->indice)), count, LBX_TYPE_ELEM_SIZE(type));
     return r;
 }
 LBX_RENDER_COMMAND * TGLCommandList::Add(GLenum method, GLuint indice_buffer_id, GLenum elem_type,  i32_t count, bool *visible)
