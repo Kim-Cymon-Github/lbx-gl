@@ -52,7 +52,14 @@ doc/html
 doc/latex
 
 # Cmake files
-build/cmake
+build/cmake/*
+
+# make files
+build/linux/*
+!build/linux/Makefile
 
 # Backup files
 *.bak
+*.gz
+*.tar
+*.zip
