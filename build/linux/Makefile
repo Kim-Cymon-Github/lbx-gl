@@ -1,4 +1,4 @@
-﻿NAME=LBX-GL
+﻿NAME=lbx-gl
 
 PLATFORM_ID ?= x64
 STRIP ?= strip
@@ -43,7 +43,7 @@ DEFS= \
 
 #GLFLAGS+=-lEGL -lGLESv2
 
-LDFLAGS=-L$(OUT_PATH) -lrt -lm -lpthread -lLBX-Core -lEGL -lGLESv2
+LDFLAGS=-L$(OUT_PATH) -lrt -lm -lpthread -llbx-core -lEGL -lGLESv2
 
 CFLAGS+=$(INC) $(DEFS) -Wall -Wstrict-aliasing=0
 
@@ -79,7 +79,7 @@ test: $(TEST_TARGET)
 $(TEST_TARGET): $(TEST_OBJS)
 	mkdir -p $(OUT_PATH)
 	mkdir -p $(TEST_OUT_PATH)
-	$(CXX) $(GLFLAGS) $(LDFLAGS) -o $(TEST_TARGET) $(TEST_OBJS) -l$(NAME) -ldl
+	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(GLFLAGS) $(LDFLAGS) -l$(NAME) -ldl
 	$(STRIP) $(TEST_TARGET)
 	tar -czvf $(TEST_TARGET).tar.gz $(TEST_TARGET)
 #	rm $(TEST_TARGET)
@@ -103,12 +103,12 @@ lbx_gles2.o: ../../src/lbx_gles2.cpp
 
 #ETC
 clean:
-	rm -rf $(LBX_OBJS) $(LIB_OBJS) $(OBJS) $(TARGET) $(TEST_TARGET) $(STATIC_TARGET)
+	rm -rf $(OBJS) $(EXT_OBJS) $(TEST_OBJS) $(TARGET) $(TEST_TARGET) $(STATIC_TARGET)
 	rm -f $(TARGET).tar.gz
 	rm -f $(TEST_TARGET).tar.gz
 	rm -f $(OUT_PATH)/$(TARGET)
 	rm -f $(OUT_PATH)/$(STATIC_TARGET)
 
 testc:
-	rm -f $(OBJS)
+	rm -f $(TEST_OBJS)
 	rm -f $(TEST_TARGET)
