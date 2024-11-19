@@ -181,6 +181,8 @@ protected:
 
     void SetShader(i32_t index, TGLShader *shader); // 내부 목적으로만 사용
     TGLShader * CreateShader(GLenum type, const char *src, const char *hdr);
+
+    size_t SaveToMem(void** p_svm, GLenum* bin_format = NULL);
 public:
     TGLProgram();
     TGLProgram(const char *file_name, GLenum bin_format);
@@ -228,12 +230,15 @@ public:
     i32_t Build(const char *vshader, TGLFragmentShader *fshader, const char *hdr = NULL);
 
     i64_t LoadFromFile(const char *file_name, GLenum bin_format);
-    i64_t LoadFromStream(LBX_STREAM *s, i32_t length, GLenum bin_format);
-    i64_t SaveToFile(const char *file_name);
-    i64_t SaveToStream(LBX_STREAM *s);
-    size_t SaveToMem(void **rcm);
+    i64_t LoadFromStream(LBX_STREAM *s, size_t size, GLenum bin_format);
 
-    i32_t LoadBinary(const void *data, i32_t length, GLenum bin_format);
+    i64_t LoadFromFile(const char* file_name);
+    i64_t LoadFromStream(LBX_STREAM* s);
+
+    i64_t SaveToFile(const char *file_name, GLenum* bin_format = NULL);
+    i64_t SaveToStream(LBX_STREAM *s, GLenum* bin_format = NULL);
+
+    i32_t LoadBinary(const void *data, size_t size, GLenum bin_format);
     inline i32_t GetBinarySize(void) {
 #ifdef GL_PROGRAM_BINARY_LENGTH_OES
         return GetIntParam(GL_PROGRAM_BINARY_LENGTH_OES);

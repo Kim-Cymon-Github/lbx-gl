@@ -8,6 +8,7 @@
 #include "GLES2/gl2ext.h"
 #include "system/lbx_log.h"
 #include "system/lbx_stream_file.h"
+#include "system/lbx_serialize.h"
 //#include "image/LBX_IMAGE.h"
 //---------------------------------------------------------------------------
 #ifdef __BORLANDC__
@@ -798,6 +799,14 @@ i32_t TGLProgram::GetIntParam(GLenum pname)
     return info;
 }
 //---------------------------------------------------------------------------
+i64_t TGLProgram::LoadFromFile(const char* file_name)
+{
+    LBX_STREAM* s = new_file_stream(file_name, "rb");
+    i64_t r = LoadFromStream(s);
+    delete_stream(s);
+    return r;
+}
+//---------------------------------------------------------------------------
 i64_t TGLProgram::LoadFromFile(const char *file_name, GLenum bin_format)
 {
     LBX_STREAM *s = new_file_stream(file_name, "rb");
@@ -806,22 +815,36 @@ i64_t TGLProgram::LoadFromFile(const char *file_name, GLenum bin_format)
     return r;
 }
 //---------------------------------------------------------------------------
-i64_t TGLProgram::LoadFromStream(LBX_STREAM *s, i32_t length, GLenum bin_format)
+i64_t TGLProgram::LoadFromStream(LBX_STREAM* s)
 {
-    void * buf = alloc_memory(length);
-    stream_read(s, buf, length);
-    i64_t r = LoadBinary(buf, length, bin_format);
+    size_t sz = 0;
+    u64_t bf = 0;
+    i64_t r = stream_read_box_header(s, &bf, &sz);
+    if (r > 0) {
+        void* buf = alloc_memory(sz);
+        stream_read(s, buf, sz);
+        i64_t r = LoadBinary(buf, sz, (GLenum)bf);
+        free_memory(buf);
+    }
+    return r;
+}
+//---------------------------------------------------------------------------
+i64_t TGLProgram::LoadFromStream(LBX_STREAM *s, size_t size, GLenum bin_format)
+{
+    void * buf = alloc_memory(size);
+    stream_read(s, buf, size);
+    i64_t r = LoadBinary(buf, size, bin_format);
     free_memory(buf);
     return r;
 }
 //---------------------------------------------------------------------------
-i32_t TGLProgram::LoadBinary(const void *data, i32_t length, GLenum bin_format)
+i32_t TGLProgram::LoadBinary(const void *data, size_t size, GLenum bin_format)
 {
     #ifndef GL_GLEXT_PROTOTYPES
     static PFNGLPROGRAMBINARYOESPROC glProgramBinaryOES = (PFNGLPROGRAMBINARYOESPROC)eglGetProcAddress("glProgramBinaryOES");
     #endif //#ifndef GL_GLEXT_PROTOTYPES
     flags &= ~(u32_t)pfLinked;
-    glProgramBinaryOES(GetHandle(), bin_format, data, length);
+    glProgramBinaryOES(GetHandle(), bin_format, data, size);
     if (glGetError() == GL_NO_ERROR) {
         flags |= (u32_t)pfLinked;
         Analyze();
@@ -839,46 +862,59 @@ i32_t TGLProgram::SaveBinary(void *dst, i32_t dst_size, GLenum *bin_format)
     if (dst == NULL || dst_size == 0) {
         return GetBinarySize();
     }
-    GLsizei length;
-    GLenum binfmt;
+    GLsizei length = 0;
+    GLenum binfmt = 0;
     if (bin_format == NULL) {
         bin_format = &binfmt;
     }
-    GL_CHECK(glGetProgramBinaryOES(GetHandle(), dst_size, &length, bin_format, dst));
-    return length;
+    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    Use();
+    Info_("%d, %d, %d", GetHandle(), GetBinarySize(), dst_size);
+    GL_CHECK(glGetProgramBinaryOES(GetHandle(), dst_size + 100, &length, bin_format, dst));
+    return (i32_t)length;
 }
 //---------------------------------------------------------------------------
-size_t TGLProgram::SaveToMem(void **svecp)
+size_t TGLProgram::SaveToMem(void **p_svec, GLenum *bin_format)
 {
-    i32_t l = GetBinarySize(), r;
+    size_t l = GetBinarySize(), r;
     if (l > 0) {
-        svec_set_length(svecp, l, 1);
-        GLenum bin_format;
-        r = SaveBinary(*svecp, l, &bin_format);
-        if (l != r) {
-            Err_("Binary size mismatch - %d:%d", l, r);
-            svec_set_length(svecp, r, 1);
+        l *= 10;
+        svec_set_length(p_svec, l, 1);
+        r = SaveBinary(*p_svec, l, bin_format);
+        if (r != l) {
+            Warn_("Binary size mismatch - %d:%d", l, r);
+            svec_set_length(p_svec, r, 1);
         } else {
-            Log_("Saved program binary (%d bytes, format=0x%X)", r, bin_format);
+            Log_("Saved program binary (%d bytes, format=0x%X)", r, *bin_format);
         }
         return r;
     }
     return 0;
 }
 //---------------------------------------------------------------------------
-i64_t TGLProgram::SaveToFile(const char *file_name)
+i64_t TGLProgram::SaveToFile(const char *file_name, GLenum* bin_format)
 {
     LBX_STREAM *s = new_file_stream(file_name, "wb");
-    i64_t r = SaveToStream(s);
+    i64_t r = SaveToStream(s, bin_format);
     delete_stream(s);
     return r;
 }
 //---------------------------------------------------------------------------
-i64_t TGLProgram::SaveToStream(LBX_STREAM *s)
+i64_t TGLProgram::SaveToStream(LBX_STREAM *s, GLenum* bin_format)
 {
     void *buf = NULL;
-    SaveToMem(&buf);
-    i64_t r = stream_write(s, buf, svec_length(buf));
+    GLenum bf = 0;
+    i64_t r = 0;
+
+    r = SaveToMem(&buf, &bf);
+    if (r > 0) {
+        if (bin_format) {
+            *bin_format = bf;
+        }
+        r = stream_write_box_header(s, bf, r);
+        r += stream_write(s, buf, svec_size(buf));
+    }
+
     svec_free(&buf);
     return r;
 }

@@ -43,7 +43,7 @@ DEFS= \
 
 #GLFLAGS+=-lEGL -lGLESv2
 
-LDFLAGS=-L$(OUT_PATH) -lrt -lm -lpthread -llbx-core -lEGL -lGLESv2
+LDFLAGS=-L$(OUT_PATH) -lrt -lm -lpthread -lEGL -lGLESv2 -llbx-core
 
 CFLAGS+=$(INC) $(DEFS) -Wall -Wstrict-aliasing=0
 
