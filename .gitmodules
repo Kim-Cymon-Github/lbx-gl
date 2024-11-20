@@ -1,4 +1,0 @@
-[submodule "lib/lbx"]
-	path = lib/lbx
-	url = git@github.com:Kim-Cymon-Github/lbx.git
-	ignore = dirty
