@@ -1,0 +1,5 @@
+[submodule "lib/lbx"]
+	path = lib/lbx
+	url = git@github.com:litbig-git/lbx.git
+	ignore = dirty
+
