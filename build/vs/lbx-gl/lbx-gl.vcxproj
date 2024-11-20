@@ -113,7 +113,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\src\version.h</Command>
+      <Command>python3 ..\..\..\lib\lbx\tool\ver_man.py ..\..\..\src\version.txt BUILD_NUMBER</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -143,7 +143,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\src\version.h</Command>
+      <Command>python3 ..\..\..\lib\lbx\tool\ver_man.py ..\..\..\src\version.txt BUILD_NUMBER</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -169,7 +169,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\src\version.h</Command>
+      <Command>python3 ..\..\..\lib\lbx\tool\ver_man.py ..\..\..\src\version.txt BUILD_NUMBER</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -199,7 +199,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>..\..\..\lib\lbx\tools\inc BUILD_NUMBER ..\..\src\version.h</Command>
+      <Command>python3 ..\..\..\lib\lbx\tool\ver_man.py ..\..\..\src\version.txt BUILD_NUMBER</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -214,6 +214,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\src\version.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

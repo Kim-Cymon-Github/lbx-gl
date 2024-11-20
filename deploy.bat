@@ -54,7 +54,7 @@ popd
 if %GIT_RESULT% equ 0 (
     echo ### Nothing to deploy
 ) else (
-    lib\lbx\tools\inc VERSION_PATCH "%VERSION_FILE%"
+    python3 lib\lbx\tool\ver_man.py "%VERSION_FILE%" VERSION_PATCH
     echo ### %COMMIT_MESSAGE%
 )
 
