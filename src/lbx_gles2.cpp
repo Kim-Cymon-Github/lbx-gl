@@ -25,6 +25,55 @@ UString GetGLStringData(GLuint obj, i32_t length, TGLGetStringFunc func)
     return r;
 }
 
+void * svec_append_glprogram(void **dst, GLuint h_prog, GLenum *bin_format)
+{
+#ifndef GL_GLEXT_PROTOTYPES
+    static PFNGLGETPROGRAMBINARYOESPROC glGetProgramBinaryOES = (PFNGLGETPROGRAMBINARYOESPROC)eglGetProcAddress("glGetProgramBinaryOES");
+#endif //#ifndef GL_GLEXT_PROTOTYPES
+    GLint pl = 0, currentProgram;
+    void *r = NULL;
+    GL_CHECK(glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram)); // 현재 활성화된 프로그램 핸들 백업 
+    GL_CHECK(glUseProgram(h_prog));
+#ifdef GL_PROGRAM_BINARY_LENGTH_OES
+    GL_CHECK(glGetProgramiv(h_prog, GL_PROGRAM_BINARY_LENGTH_OES, &pl));
+#endif //GL_PROGRAM_BINARY_LENGTH_OES
+    if (pl > 0) {
+        r = svec_append(dst, pl, 1);
+        GL_CHECK(glGetProgramBinaryOES(h_prog, pl, &pl, bin_format, r));
+    }
+    GL_CHECK(glUseProgram(currentProgram));
+    return r;
+}
+
+size_t stream_write_glprogram(LBX_STREAM *s, GLuint h_prog)
+{
+    GLenum bin_format = 0;
+    void *tmp = svec_from_glprogram(h_prog, &bin_format);
+    size_t r = stream_write_box_header(s, bin_format, svec_length(tmp));
+    svec_free(&tmp);
+    return r;
+}
+
+size_t stream_read_glprogram(LBX_STREAM *s, GLuint h_prog)
+{
+    #ifndef GL_GLEXT_PROTOTYPES
+    static PFNGLPROGRAMBINARYOESPROC glProgramBinaryOES = (PFNGLPROGRAMBINARYOESPROC)eglGetProcAddress("glProgramBinaryOES");
+    #endif //#ifndef GL_GLEXT_PROTOTYPES
+    size_t r, payload_size;
+    u64_t bin_format;
+    GLenum err = GL_NO_ERROR;
+    r = stream_read_box_header(s, &bin_format, &payload_size);
+    if (r > 0) {
+        void * tmp = svec_alloc(payload_size, 1);
+        r += stream_read(s, tmp, payload_size);
+        GL_CHECK(glProgramBinaryOES(h_prog, (GLenum)bin_format, tmp, payload_size));
+    }
+    return r;
+}
+
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////
 TGLObject::TGLObject()
@@ -867,10 +916,9 @@ i32_t TGLProgram::SaveBinary(void *dst, i32_t dst_size, GLenum *bin_format)
     if (bin_format == NULL) {
         bin_format = &binfmt;
     }
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     Use();
     Info_("%d, %d, %d", GetHandle(), GetBinarySize(), dst_size);
-    GL_CHECK(glGetProgramBinaryOES(GetHandle(), dst_size + 100, &length, bin_format, dst));
+    GL_CHECK(glGetProgramBinaryOES(GetHandle(), dst_size, &length, bin_format, dst));
     return (i32_t)length;
 }
 //---------------------------------------------------------------------------

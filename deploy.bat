@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 chcp 65001
 cls
 :: version 파일 경로 설정
@@ -34,7 +35,7 @@ git add "include/%SUB_DIR%/"
 git add lib/
 
 :: git status로 현재 상태 점검
-git status | findstr /C:"nothing to commit, working tree clean" /C:"nothing added to commit" > nul
+git status | findstr /C:"nothing to commit, working tree clean" /C:"nothing added to commit" /C:"no changes added to commit"> nul
 set "GIT_RESULT=%errorlevel%"
 
 if %GIT_RESULT% equ 0 (
@@ -47,15 +48,15 @@ if %GIT_RESULT% equ 0 (
         set "%%i=%%j"
     )
     :: 커밋 메시지 생성
-    set "COMMIT_MESSAGE=%MODULE_NAME% %VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH% build %BUILD_NUMBER% 배포"
+    set "COMMIT_MESSAGE=%MODULE_NAME% !VERSION_MAJOR!.!VERSION_MINOR!.!VERSION_PATCH! build !BUILD_NUMBER! 배포"
 
-	:: LBX 경로로 이동하여 commit 후 push
+    :: LBX 경로로 이동하여 commit 후 push
     pushd lib\lbx
-    if not COMMIT_MESSAGE == "" (
-        git commit -m "%COMMIT_MESSAGE%"
+    if not "!COMMIT_MESSAGE!" == "" (
+        git commit -m "!COMMIT_MESSAGE!"
         git push
-        echo %COMMIT_MESSAGE%
-    ) 
+        echo !COMMIT_MESSAGE!
+    )
 )
 popd
 
