@@ -65,10 +65,11 @@ extern UString GetGLStringData(GLuint obj, i32_t length, TGLGetStringFunc func);
 
 u8_t EstimateAttribTypeFromName(const char *name, i32_t l = -1);
 
+LBX_GL_EXPORT i32_t  dump_glprogram(void* dst, i32_t dst_size, GLuint h_prog, GLenum* bin_format);
 LBX_GL_EXPORT void * svec_append_glprogram(void **dst, GLuint h_prog, GLenum *bin_format);
-lbx_inline void *svec_from_glprogram(GLuint h_prog, GLenum *bin_format) { void *r = NULL; return svec_append_glprogram(&r, h_prog, bin_format); } 
-LBX_GL_EXPORT size_t stream_write_glprogram(LBX_STREAM *s, GLuint h_prog);
-LBX_GL_EXPORT size_t stream_read_glprogram(LBX_STREAM *s, GLuint h_prog);
+LBX_GL_EXPORT size_t stream_write_glprogram(LBX_STREAM* s, GLuint h_prog, GLenum *bin_format); // bin_format은 NULL도 가능
+LBX_GL_EXPORT size_t stream_read_glprogram(LBX_STREAM *s, GLuint h_prog, GLenum* bin_format); // bin_format은 NULL도 가능
+lbx_inline    void* svec_from_glprogram(GLuint h_prog, GLenum* bin_format) { void* tmp = NULL; return svec_append_glprogram(&tmp, h_prog, bin_format); }
 //===========================================================================
 class LBX_GL_EXPORT TGLObject
 {
