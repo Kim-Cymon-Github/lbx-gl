@@ -20,9 +20,10 @@ i32_t main(void)
     tick_set_start(); // tick 초기화
     change_log_handler(&simple_console_log_handler); // 로그 핸들러 연결
 
-    test();
-
     Log_("lbx-gl library function test");
 
-    check_memory_usage(true); // reset
+    test();
+
+
+    check_memory_usage(false); // reset
 }

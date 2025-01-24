@@ -205,6 +205,8 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
             Err_("eglInitialize() failed: %s", lbeglGetErrorStr(err));
             return err;
         }
+        const char* version = eglQueryString(ctx->egl_display, EGL_VERSION);
+        Log_("EGL Version: %s", version);
     }
 
     if (err == EGL_SUCCESS && ctx->egl_surface == EGL_NO_SURFACE) {
@@ -225,11 +227,16 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
                 attrib_list = default_egl_config_attribs;
             }
 
-            if (EGL_FALSE == eglChooseConfig(ctx->egl_display, attrib_list, configs, numConfigs, &numConfigs)) {
+            if (EGL_TRUE == eglChooseConfig(ctx->egl_display, attrib_list, configs, numConfigs, &numConfigs)) {
+                if (numConfigs > 0) {
+                    Log_("%d configs are matching", numConfigs);
+                } else {
+                    err = -1;
+                    Err_("eglChooseConfig returned true but no configs are matching");
+                }
+            } else {
                 err = eglGetError();
                 Err_("eglChooseConfig failed: %s", lbeglGetErrorStr(err));
-            } else {
-                Log_("%d configs are matching", numConfigs);
             }
         }
 
