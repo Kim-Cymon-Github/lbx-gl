@@ -4,7 +4,7 @@
 #define lbx_glH
 //---------------------------------------------------------------------------
 
-#include "lbx_type.h"
+#include "image/lbx_image.h"
 
 #define GLES_3_2
 
@@ -81,6 +81,8 @@ lbx_inline bool RC_SwapBuffers(const LBX_RENDER_CONTEXT *ctx) { return (bool)egl
 LBX_GL_EXPORT const char * lbglGetErrorStr(GLenum error_code);
 LBX_GL_EXPORT const char * lbeglGetErrorStr(EGLint error_code);
 
+LBX_GL_EXPORT i32_t LBX_IMAGE_BindTextures(const LBX_IMAGE* self);
+
 #if defined(ENABLE_GL_CHECK)
 //#define GL_CHECK(aaa) aaa; {GLint _err = glGetError(); if (_err != GL_NO_ERROR) Err_("gl_assert! " #aaa " failed: %s", lbglGetErrorStr(_err));}
 #define GL_CHECK_READY do { \
@@ -104,8 +106,6 @@ LBX_GL_EXPORT const char * lbeglGetErrorStr(EGLint error_code);
 #define GL_CHECK(...) __VA_ARGS__
 #endif //#else #if defined(ENABLE_GL_ASSERT)
 
-
-
 #ifdef __cplusplus
 }
 #endif //#ifdef __cplusplus
@@ -124,6 +124,6 @@ public:
     inline ~LbxRenderContext() { RC_Free(this); }
     inline i32_t Init(EGLContext context_to_share = NULL, EGLint const* attrib_list = NULL) { return RC_Init(this, context_to_share, attrib_list); }
 };
-
 #endif //#ifndef lbx_glHPP
 #endif //#ifdef __cplusplus
+

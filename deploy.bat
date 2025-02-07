@@ -13,6 +13,11 @@ for %%I in ("%SCRIPT_PATH%.") do set "MODULE_NAME=%%~nxI"
 :: include 폴더에 서브디렉토리를 만드는 경우 이런 식으로 생성
 set "SUB_DIR=%MODULE_NAME:*lbx-=%%"
 
+:: SUB_DIR이 core이면 공백으로 처리
+if "%SUB_DIR%"=="core" (
+    set "SUB_DIR="
+)
+
 :: 상태 표시
 echo ### Deploying %MODULE_NAME% ... (SubDir: %SUB_DIR%)
 
@@ -44,7 +49,7 @@ if %GIT_RESULT% equ 0 (
 ) else (
     :: 변경 내용이 감지되므로 일단 원래 디렉토리로 이동, 현재 버전 정보 취득 및 갱신(VERSION_PATCH 증가)
     popd
-    for /f "tokens=1,2 delims=: " %%i in ('python3 lib\lbx\tool\ver_man.py "%VERSION_FILE%" VERSION_PATCH') do (
+    for /f "tokens=1,2 delims=: " %%i in ('python lib\lbx\tool\ver_man.py "%VERSION_FILE%" VERSION_PATCH') do (
         set "%%i=%%j"
     )
     :: 커밋 메시지 생성

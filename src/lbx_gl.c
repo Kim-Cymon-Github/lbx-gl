@@ -351,3 +351,27 @@ i32_t RC_Free(LBX_RENDER_CONTEXT *ctx)
     // 멀티윈도우 대응 및 싱글 윈도우 대응 코드
     return ret;
 }
+
+
+i32_t LBX_IMAGE_BindTextures(const LBX_IMAGE* self)
+{
+    const LBX_PXL_PLANE* p = self->planes;
+    i32_t i = self->plane_count - 1, ret = 0;
+
+    for (; i >= 0; --i) {
+        if (p[i].texture != 0) {
+            GLint tx = p[i].texture;
+            GL_CHECK(glActiveTexture(GL_TEXTURE0 + i));
+            if (tx > 0) {
+                GL_CHECK(glBindTexture(GL_TEXTURE_2D, tx));
+            } else {
+                GL_CHECK(glBindTexture(GL_TEXTURE_EXTERNAL_OES, -tx));
+            }
+            ++ret;
+        } else {
+            break;
+        }
+    }
+
+    return ret;
+}

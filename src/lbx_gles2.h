@@ -503,6 +503,7 @@ public:
 
     i32_t Register(const LBX_REFL_STRUCT_INFO *rtti);
     TGLAttribBuffer & Register(char attrib_type, LBX_TYPE data_type, u16_t offset);
+    bool Register(const char* struct_id); // 아직 미완성
 
     i32_t BindTo(TGLProgram *program, i32_t elem_size);
     inline void Unbind(void) {glBindBuffer(GL_ARRAY_BUFFER, 0);}

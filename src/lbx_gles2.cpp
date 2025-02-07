@@ -1214,10 +1214,10 @@ void TGLProgram::DisableArrayMode(i32_t location)
     if (location == -1) {
         i32_t l = svec_len32(attrib_types);
         for (i32_t i = 0; i < l; i++) {
-            glDisableVertexAttribArray(i);
+            GL_CHECK(glDisableVertexAttribArray(i));
         }
     } else {
-        glDisableVertexAttribArray(location);
+        GL_CHECK(glDisableVertexAttribArray(location));
     }
 }
 //---------------------------------------------------------------------------
@@ -1526,6 +1526,59 @@ TGLAttribBuffer::~TGLAttribBuffer()
     SVEC_FREE(&bd);
 }
 
+bool TGLAttribBuffer::Register(const char* struct_id)
+{
+    i32_t i, len = strlen(struct_id);
+    u8_t attrib_type;
+    LBX_TYPE data_type;
+    i32_t size;
+    u16_t offset = 0;
+
+    SVEC_FREE(&bd);
+    
+    const char* s = struct_id;
+    for (i = 0; i < len; ++i) {
+        switch (s[i]) {
+        case 'V':
+        case 'v':
+            attrib_type = LBX_POSITION;
+            data_type = LBX_TYPE_VEC4_F32;
+            size = (i32_t)sizeof(vec4_f32);
+            if (isdigit(s[i + 1])) {
+                switch (s[i + 1]) {
+                case '2': 
+                    data_type = LBX_TYPE_VEC2_F32;
+                    size = (i32_t)sizeof(vec2_f32);
+                    break;
+                case '3':
+                    data_type = LBX_TYPE_VEC3_F32;
+                    size = (i32_t)sizeof(vec3_f32);
+                    break;
+                case '4':
+                    break;
+                default:
+                    size = -1;
+                    break;
+                }
+            }
+            break;
+        }
+        if (size == -1) {
+            return false;
+        } else {
+            LBX_BUFFER_DESCRIPTOR* p = SVEC_APPEND(LBX_BUFFER_DESCRIPTOR, &bd, 1);
+            p->attrib_type = attrib_type;
+            p->data_type = data_type;
+            p->offset = offset;
+
+            offset += size;
+
+
+        }
+    }
+    return true;;
+}
+
 TGLAttribBuffer & TGLAttribBuffer::Register(char attrib_type, LBX_TYPE data_type, u16_t offset)
 {
     LBX_BUFFER_DESCRIPTOR *p = SVEC_APPEND(LBX_BUFFER_DESCRIPTOR, &bd, 1);
@@ -1556,6 +1609,10 @@ i32_t TGLAttribBuffer::BindTo(TGLProgram *program, i32_t elem_size)
 {
     i32_t i, i_end, r = 0;
     i_end = svec_len32(bd);
+    if (i_end == 0) {
+        Err_("No Buffer Descriptor was registered to the TGLAttribBuffer instatnce");
+        return r;
+    }
     program->Use();
     Bind();
     for (i = 0; i < i_end; i++) {
