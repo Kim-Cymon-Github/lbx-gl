@@ -81,6 +81,22 @@ lbx_inline bool RC_SwapBuffers(const LBX_RENDER_CONTEXT *ctx) { return (bool)egl
 LBX_GL_EXPORT const char * lbglGetErrorStr(GLenum error_code);
 LBX_GL_EXPORT const char * lbeglGetErrorStr(EGLint error_code);
 
+
+/**
+ * @brief Binds textures for each pixel plane in the image.
+ *
+ * This function iterates through the pixel planes stored in the LBX_IMAGE object in reverse order (from last to first)
+ * and binds textures to the corresponding texture units if they exist.
+ *
+ * If a pixel plane's texture value is non-zero:
+ * - A positive value binds the texture using the GL_TEXTURE_2D target.
+ * - A negative value binds the texture (using its absolute value) with the GL_TEXTURE_EXTERNAL_OES target.
+ *
+ * The iteration stops when a pixel plane with a texture value of 0 is encountered.
+ *
+ * @param self Pointer to an LBX_IMAGE structure containing texture binding information.
+ * @return The number of textures that were successfully bound.
+ */
 LBX_GL_EXPORT i32_t LBX_IMAGE_BindTextures(const LBX_IMAGE* self);
 
 #if defined(ENABLE_GL_CHECK)
