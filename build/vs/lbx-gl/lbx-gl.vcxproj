@@ -208,7 +208,7 @@
     <ClInclude Include="..\..\src\version.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\dllmain.cpp" />
+    <ClCompile Include="..\..\..\src\dllmain.cpp" />
     <ClCompile Include="..\..\..\src\lbx_gl.c" />
     <ClCompile Include="..\..\..\src\lbx_gl_class.cpp" />
   </ItemGroup>

@@ -26,7 +26,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\dllmain.cpp">
+    <ClCompile Include="..\..\..\src\dllmain.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\lbx_gl.c">
