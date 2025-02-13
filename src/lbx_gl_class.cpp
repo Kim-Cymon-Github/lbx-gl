@@ -1126,7 +1126,7 @@ void TGLProgram::Analyze(void)
         GLenum type;
         GLint length;
         GLint size;
-        glGetActiveAttrib(handle, (GLuint)i, max_length, &length, &size, &type, name.c_str());
+        GL_CHECK(glGetActiveAttrib(handle, (GLuint)i, max_length, &length, &size, &type, name.c_str()));
         GLint loc = GetAttribLocation(name.c_str());
         if (loc >= 0 && loc < attrib_count) {
             attrib_types[loc] = EstimateAttribTypeFromName(name.c_str(), length);
@@ -1228,79 +1228,79 @@ void TGLProgram::EnableArrayMode(i32_t location)
     if (location == -1) {
         i32_t l = svec_len32(attrib_types);
         for (i32_t i = 0; i < l; i++) {
-            glEnableVertexAttribArray(i);
+            GL_CHECK(glEnableVertexAttribArray(i));
         }
     } else {
-        glEnableVertexAttribArray(location);
+        GL_CHECK(glEnableVertexAttribArray(location));
     }
 }
 //---------------------------------------------------------------------------
 void TGLProgram::Attribute(GLint attrib_loc, GLint components, GLenum component_type, GLboolean normalize, i32_t stride, const void *offset)
 {
-    glEnableVertexAttribArray(attrib_loc);
-    glVertexAttribPointer(attrib_loc, components, component_type, normalize, stride, offset);
+    GL_CHECK(glEnableVertexAttribArray(attrib_loc));
+    GL_CHECK(glVertexAttribPointer(attrib_loc, components, component_type, normalize, stride, offset));
 }
 //---------------------------------------------------------------------------
 void TGLProgram::Attribute(GLint attrib_loc, vec4_u8 data)
 {
-    glDisableVertexAttribArray(attrib_loc);
+    GL_CHECK(glDisableVertexAttribArray(attrib_loc));
     vec4_f32 n = vec4_f32_((float)data.x / 255.0f, (float)data.y / 255.0f, (float)data.z / 255.0f, (float)data.w / 255.0f);
-    glVertexAttrib4fv(attrib_loc, (float*)&n);
+    GL_CHECK(glVertexAttrib4fv(attrib_loc, (float*)&n));
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const float *data, i32_t count)
 {
-    Use(); glUniform1fv(uniform_loc, count, data); return 1;
+    Use(); GL_CHECK(glUniform1fv(uniform_loc, count, data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const vec2_f32 *data, i32_t count)
 {
-    Use(); glUniform2fv(uniform_loc, count, (float*)data); return 1;
+    Use(); GL_CHECK(glUniform2fv(uniform_loc, count, (float*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const vec3_f32 *data, i32_t count)
 {
-    Use(); glUniform3fv(uniform_loc, count, (float*)data); return 1;
+    Use(); GL_CHECK(glUniform3fv(uniform_loc, count, (float*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const vec4_f32 *data, i32_t count)
 {
-    Use(); glUniform4fv(uniform_loc, count, (float*)data); return 1;
+    Use(); GL_CHECK(glUniform4fv(uniform_loc, count, (float*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const i32_t *data, i32_t count)
 {
-    Use(); glUniform1iv(uniform_loc, count, data); return 1;
+    Use(); GL_CHECK(glUniform1iv(uniform_loc, count, data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const vec2_i32 *data, i32_t count)
 {
-    Use(); glUniform2iv(uniform_loc, count, (i32_t*)data); return 1;
+    Use(); GL_CHECK(glUniform2iv(uniform_loc, count, (i32_t*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const vec3_i32 *data, i32_t count)
 {
-    Use(); glUniform3iv(uniform_loc, count, (i32_t*)data); return 1;
+    Use(); GL_CHECK(glUniform3iv(uniform_loc, count, (i32_t*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const vec4_i32 *data, i32_t count)
 {
-    Use(); glUniform4iv(uniform_loc, count, (i32_t*)data); return 1;
+    Use(); GL_CHECK(glUniform4iv(uniform_loc, count, (i32_t*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const mat2_f32 *data, i32_t count)
 {
-    Use(); glUniformMatrix2fv(uniform_loc, count, GL_FALSE, (float*)data); return 1;
+    Use(); GL_CHECK(glUniformMatrix2fv(uniform_loc, count, GL_FALSE, (float*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const mat3_f32 *data, i32_t count)
 {
-    Use(); glUniformMatrix3fv(uniform_loc, count, GL_FALSE, (float*)data); return 1;
+    Use(); GL_CHECK(glUniformMatrix3fv(uniform_loc, count, GL_FALSE, (float*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const mat4_f32 *data, i32_t count)
 {
-    Use(); glUniformMatrix4fv(uniform_loc, count, GL_FALSE, (float*)data); return 1;
+    Use(); GL_CHECK(glUniformMatrix4fv(uniform_loc, count, GL_FALSE, (float*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, LBX_TYPE type, const void *data, i32_t count)
@@ -1626,7 +1626,7 @@ i32_t TGLAttribBuffer::BindTo(TGLProgram *program, i32_t elem_size)
         if (glt.components == 0) {
             continue;
         }
-        glBindBuffer(GL_ARRAY_BUFFER, GetHandle());
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, GetHandle()));
         program->EnableArrayMode(loc);
 
 /*
@@ -1634,7 +1634,7 @@ i32_t TGLAttribBuffer::BindTo(TGLProgram *program, i32_t elem_size)
             si->component_type, si->normalize, bi[i]->stride,
             bi[i]->data + si->offset);
 */
-        glVertexAttribPointer(loc, glt.components, glt.component_type, glt.normalize, elem_size, (void*)d.offset);
+        GL_CHECK(glVertexAttribPointer(loc, glt.components, glt.component_type, glt.normalize, elem_size, (void*)d.offset));
         r++;
     }
     return r;
@@ -1876,16 +1876,16 @@ i32_t TGLAttribBinder::Enable(void)
     i_end = svec_len32(bi);
     for (i = 0; i < i_end; i++) {
         j_end = GetBufferSubCount(bi[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, bi[i]->buffer_id);
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, bi[i]->buffer_id));
         LBX_ATTRIB_BINDING * si = GetBufferSub(bi[i]);
         for (j = 0; j < j_end; j++, si++) {
-            glEnableVertexAttribArray(si->attrib_loc);
-            glVertexAttribPointer(si->attrib_loc, si->components,
+            GL_CHECK(glEnableVertexAttribArray(si->attrib_loc));
+            GL_CHECK(glVertexAttribPointer(si->attrib_loc, si->components,
                 si->component_type, si->normalize, bi[i]->stride,
-                bi[i]->data + si->offset);
+                bi[i]->data + si->offset));
         }
     }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
     return 1;
 }
 //---------------------------------------------------------------------------
@@ -2149,39 +2149,48 @@ TGLFrameBufferObject::TGLFrameBufferObject(i32_t width, i32_t height)
 TGLFrameBufferObject::~TGLFrameBufferObject()
 {
     if (handle) {
-        glDeleteFramebuffers(1, &handle);
+        GL_CHECK(glDeleteFramebuffers(1, &handle));
         handle = 0;
     }
     if (depth) {
-        glDeleteRenderbuffers(1, &depth);
+        GL_CHECK(glDeleteRenderbuffers(1, &depth));
     }
     delete tex;
 }
 i32_t TGLFrameBufferObject::SetSize(i32_t width, i32_t height)
 {
     GLint n_fbo;
+    bool modified = false;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &n_fbo);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, GetHandle());
 
-    glBindRenderbuffer(GL_RENDERBUFFER, depth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, GetHandle()));
+    if (width != sz.width || height != sz.height) {
+        sz = size2_i16_(width, height);
+        // 먼저 detach 하고 
+        GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0));
+        // 새로운 storage 할당:
+        GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, depth));
+        GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, LBX_GL_DEPTH_COMPONENT, width, height));
+        // 다시 연결
+        GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
+    }
     tex->Bind();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
     if (n_fbo != handle) {
-        glBindFramebuffer(GL_FRAMEBUFFER, n_fbo);
+        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, n_fbo));
     }
     return (i32_t)status;
 }
 void TGLFrameBufferObject::Bind(void)
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, GetHandle());
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, GetHandle()));
 }
 void TGLFrameBufferObject::Release(void)
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 
 GLuint TGLFrameBufferObject::GetHandle(void)
@@ -2190,12 +2199,12 @@ GLuint TGLFrameBufferObject::GetHandle(void)
         GLint n_fbo;
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &n_fbo);
 
-        glGenFramebuffers(1, &handle);
-        glBindFramebuffer(GL_FRAMEBUFFER, handle);
+        GL_CHECK(glGenFramebuffers(1, &handle));
+        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, handle));
 
-        glGenRenderbuffers(1, &depth);
-        glBindRenderbuffer(GL_RENDERBUFFER, depth);
-        GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, sz.width, sz.height));
+        GL_CHECK(glGenRenderbuffers(1, &depth));
+        GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, depth));
+        GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, LBX_GL_DEPTH_COMPONENT, sz.width, sz.height));
         GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
 
         if (tex == NULL) {
@@ -2222,7 +2231,7 @@ GLuint TGLFrameBufferObject::GetHandle(void)
         delete [] buf;
 */
         if (n_fbo != handle) {
-            glBindFramebuffer(GL_FRAMEBUFFER, n_fbo);
+            GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, n_fbo));
         }
     }
     return handle;

@@ -131,16 +131,16 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
     EGLint const default_egl_config_attribs[] = {
 
         EGL_BUFFER_SIZE,             EGL_DONT_CARE,
-        EGL_RED_SIZE,                8,
-        EGL_GREEN_SIZE,              8,
-        EGL_BLUE_SIZE,               8,
-        EGL_ALPHA_SIZE,              8,
+        EGL_RED_SIZE,                LBX_GL_COLOR_BITS,
+        EGL_GREEN_SIZE,              LBX_GL_COLOR_BITS,
+        EGL_BLUE_SIZE,               LBX_GL_COLOR_BITS,
+        EGL_ALPHA_SIZE,              LBX_GL_COLOR_BITS,
         EGL_COLOR_BUFFER_TYPE,       EGL_RGB_BUFFER,
         EGL_RENDERABLE_TYPE,         LBX_RENDERABLE_TYPE,     //
 //		EGL_CONFIG_CAVEAT,           EGL_DONT_CARE,
 //		EGL_CONFIG_ID,               EGL_DONT_CARE,
 
-        EGL_DEPTH_SIZE,              16,
+        EGL_DEPTH_SIZE,              LBX_GL_DEPTH_BITS,
 
         EGL_LEVEL,                   0,
         EGL_MAX_SWAP_INTERVAL,       EGL_DONT_CARE,

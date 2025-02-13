@@ -63,6 +63,14 @@ extern "C" {
 #define RC_FLAG_OWNS_NATIVE_WINDOW (0x00000001u)
 #define RC_FLAG_OWNS_NATIVE_DISPLAY (0x00000002u)
 
+#define LBX_GL_COLOR_BITS (8)
+#define LBX_GL_DEPTH_BITS (16)
+#if LBX_GL_DEPTH_BITS > 16
+#   define LBX_GL_DEPTH_COMPONENT  GL_DEPTH_COMPONENT
+#else
+#   define LBX_GL_DEPTH_COMPONENT  GL_DEPTH_COMPONENT16
+#endif
+
 typedef struct  {
     EGLNativeWindowType  native_window;
     EGLNativeDisplayType native_display;
