@@ -4,12 +4,13 @@
 #pragma hdrstop
 #endif //#ifdef __BORLANDC__
 
-#include "lbx_gles2.h"
+#include "lbx_gl_class.h"
 #include "GLES2/gl2ext.h"
 #include "system/lbx_log.h"
 #include "system/lbx_stream_file.h"
 #include "system/lbx_serialize.h"
-//#include "image/LBX_IMAGE.h"
+#include "image/lbx_image.h"
+
 //---------------------------------------------------------------------------
 #ifdef __BORLANDC__
 #pragma package(smart_init)
@@ -126,7 +127,7 @@ TLBTexture::TLBTexture()
 /////////////////////////////////////////////////////////////////////////////
     : inherited()
 {
-    LBX_IMAGE_Init(&image_format, 0, 0, 0, NULL);
+    LBX_IMAGE_Init(&image_format, 0, 0, fourcc_('R','G','B','A'), NULL);
 }
 //---------------------------------------------------------------------------
 TLBTexture::~TLBTexture()

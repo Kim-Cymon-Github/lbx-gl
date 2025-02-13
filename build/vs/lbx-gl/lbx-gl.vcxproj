@@ -204,13 +204,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\lbx_gl.h" />
-    <ClInclude Include="..\..\..\src\lbx_gles2.h" />
+    <ClInclude Include="..\..\..\src\lbx_gl_class.h" />
     <ClInclude Include="..\..\src\version.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\dllmain.cpp" />
     <ClCompile Include="..\..\..\src\lbx_gl.c" />
-    <ClCompile Include="..\..\..\src\lbx_gles2.cpp" />
+    <ClCompile Include="..\..\..\src\lbx_gl_class.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\README.md" />

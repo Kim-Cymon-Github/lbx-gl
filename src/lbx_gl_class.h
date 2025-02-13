@@ -1,7 +1,7 @@
 ﻿//---------------------------------------------------------------------------
 
-#ifndef lbx_gles2H
-#define lbx_gles2H
+#ifndef lbx_gl_classesH
+#define lbx_gl_classesH
 //---------------------------------------------------------------------------
 #include "lbx_stream.h"
 #include "image/lbx_image.h"

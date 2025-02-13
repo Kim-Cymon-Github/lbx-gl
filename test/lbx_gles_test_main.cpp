@@ -1,5 +1,5 @@
 ﻿#include <stdio.h>
-#include "lbx_gles2.h"
+#include "lbx_gl_class.h"
 #define IMPLEMENT_SIMPLE_CONSOLE_LOG_HANDLER
 #include "system/lbx_log.h"
 #include "system/lbx_console.h"
