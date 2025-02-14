@@ -832,12 +832,14 @@ protected:
 //	GLuint tex;
     GLuint depth;
     size2_i16 sz;
+    i32_t samples;
+    GLenum Update(size2_i16 size, i32_t new_samples);
 public:
     TGLFrameBufferObject();
     TGLFrameBufferObject(i32_t width, i32_t height);
     virtual ~TGLFrameBufferObject();
-    i32_t SetSize(i32_t width, i32_t height);
-    inline i32_t SetSize(size2_i16 size) { return SetSize(size.width, size.height); }
+    inline GLenum SetSize(i32_t width, i32_t height, i32_t multisample = 1) { return Update(size2_i16_(width, height), multisample); }
+    inline GLenum SetSize(size2_i16 size, i32_t multisamples = 1) { return Update(size, multisamples); }
     void Bind(void);
     void Release(void);
 //	inline GLuint GetTexture() {return tex;}
@@ -846,6 +848,7 @@ public:
     virtual GLuint GetHandle(void);
     inline GLuint GetTexHandle(void) {return tex->GetHandle();}
     inline size2_i16 GetSize(void) {return sz;}
+
 };
 
 

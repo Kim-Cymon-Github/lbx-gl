@@ -2135,7 +2135,7 @@ i32_t TGLDrawList::Draw(void)
 
 
 TGLFrameBufferObject::TGLFrameBufferObject()
-    : inherited(), flags(0), tex(NULL), depth(0)
+    : inherited(), flags(0), tex(NULL), depth(0), samples(1)
 {
     sz = size2_i16_(0,0);
 }
@@ -2157,12 +2157,13 @@ TGLFrameBufferObject::~TGLFrameBufferObject()
     }
     delete tex;
 }
-i32_t TGLFrameBufferObject::SetSize(i32_t width, i32_t height)
+/*
+GLenum TGLFrameBufferObject::SetSize(i32_t width, i32_t height)
 {
+    return Update(size2_i16_(width, height));
     GLint n_fbo;
     bool modified = false;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &n_fbo);
-
 
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, GetHandle()));
     if (width != sz.width || height != sz.height) {
@@ -2175,8 +2176,33 @@ i32_t TGLFrameBufferObject::SetSize(i32_t width, i32_t height)
         // 다시 연결
         GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
     }
+#if 1
     tex->Bind();
     GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
+    if (samples > 1) {
+        static PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC glFramebufferTexture2DMultisampleEXT =
+            (PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC)eglGetProcAddress("glFramebufferTexture2DMultisampleEXT");
+        if (glFramebufferTexture2DMultisampleEXT) {
+            GL_CHECK(glFramebufferTexture2DMultisampleEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                            GL_TEXTURE_2D, tex->GetHandle(), 0, 4));
+            GL_CHECK(glBlitFramebufferEXT())
+        } else {
+            Err_("Cannot find glFramebufferTexture2DMultisampleEXT function, multi-sampling disabled");
+            samples = 1;
+        }
+    }
+#else
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, tex->GetHandle()));
+    static PFNGLTEXSTORAGE2DMULTISAMPLEPROC glTexImage2DMultisample = 
+        (PFNGLTEXSTORAGE2DMULTISAMPLEPROC)eglGetProcAddress("glTexImage2DMultisample");
+    if (glTexImage2DMultisample) {
+        GL_CHECK(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA8, width, height, GL_TRUE));
+    } else {
+        Err_("Cannot find glTexImage2DMultisample function, multi-sampling disabled");
+        samples = 1;
+    }
+    GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, tex->GetHandle(), 0)); // 마지막은 mipmap 레벨임
+#endif
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
     if (n_fbo != handle) {
@@ -2184,6 +2210,7 @@ i32_t TGLFrameBufferObject::SetSize(i32_t width, i32_t height)
     }
     return (i32_t)status;
 }
+*/
 void TGLFrameBufferObject::Bind(void)
 {
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, GetHandle()));
@@ -2192,47 +2219,79 @@ void TGLFrameBufferObject::Release(void)
 {
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
+GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
+{
+    GLint n_fbo;
+    GLenum status = GL_FRAMEBUFFER_UNDEFINED;
+    bool size_changed = false, sample_changed = false;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &n_fbo);
+
+    if (!handle) {
+        GL_CHECK(glGenFramebuffers(1, &handle)); // Frame buffer 할당
+        GL_CHECK(glGenRenderbuffers(1, &depth)); // Render buffer 할당
+        sz = new_size;
+        size_changed = (new_size.width * new_size.height != 0);
+        sample_changed = true;
+    } else {
+        // 렌더버퍼가 이미 연결돼 있을 수 있으니 먼저 현 렌더버퍼를 분리
+        GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0));
+        // 사이즈가 같으면 아무것도 하지 않는다
+        if (sz.width != new_size.width || sz.height != new_size.height) {
+            size_changed = true;
+            sz = new_size;
+        }
+        if (samples != new_samples) {
+            sample_changed = true;
+            samples = new_samples;
+        }
+    }
+    if (!handle || !depth) {
+        // 프레임버퍼나 렌더버퍼 생성 실패이므로 바로 오류 처리
+        return -1;
+    }
+
+    // 현 Framebuffer를 바인딩하고
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, handle));
+
+    if (size_changed || sample_changed) {
+        if (samples == 1) {
+            // 렌더버퍼(깊이버퍼)를 바인딩하고
+            GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, depth));
+            // 렌더버퍼(깊이버퍼)의 용량을 재조정 하고
+            GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, LBX_GL_DEPTH_COMPONENT, sz.width, sz.height));
+            // 다시 연결해준다.
+            GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
+
+            // 텍스쳐 객체가 없는 경우엔 새로 생성
+            if (tex == NULL) {
+                tex = new TGLTexture2D();
+            }
+            // 텍스쳐를 바인딩하고
+            tex->Bind();
+            // 파라미터 설정
+            GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+            GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+            // 텍스쳐 크기 변경
+            GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sz.width, sz.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
+            GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->GetHandle(), 0)); // 마지막은 mipmap 레벨임
+        } else {
+
+        }
+    }
+    // 프레임버퍼 상태 점검
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
+    // Framebuffer 바인딩을 원복함
+    if (n_fbo != handle) {
+        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, n_fbo));
+    }
+    return status;
+}
 
 GLuint TGLFrameBufferObject::GetHandle(void)
 {
     if (!handle) {
-        GLint n_fbo;
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &n_fbo);
-
-        GL_CHECK(glGenFramebuffers(1, &handle));
-        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, handle));
-
-        GL_CHECK(glGenRenderbuffers(1, &depth));
-        GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, depth));
-        GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, LBX_GL_DEPTH_COMPONENT, sz.width, sz.height));
-        GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
-
-        if (tex == NULL) {
-            tex = new TGLTexture2D();
-        }
-
-//		glGenTextures(1, &tex);
-//		glBindTexture(GL_TEXTURE_2D, tex);
-//		GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
-
-        tex->Bind();
-        GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-        GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sz.width, sz.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
-        GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->GetHandle(), 0)); // 마지막은 mipmap 레벨임
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-
-/*
-        u32_t *buf = new u32_t[1280*720];
-        for (i32_t i = 0; i < 1280*720; i++) {
-            buf[i] = 0xff00ffff;
-        }
-        GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 720, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf));
-        delete [] buf;
-*/
-        if (n_fbo != handle) {
-            GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, n_fbo));
-        }
+        Update(sz, samples);
     }
     return handle;
 }
