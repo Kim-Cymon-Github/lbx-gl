@@ -13,6 +13,7 @@
 
 i32_t main(void)
 {
+    i32_t major, minor, patch, build;
 #ifdef _WIN32
     system("chcp 65001");
 #endif //#ifdef _WIN32
@@ -20,7 +21,8 @@ i32_t main(void)
     tick_set_start(); // tick 초기화
     change_log_handler(&simple_console_log_handler); // 로그 핸들러 연결
 
-    Log_("lbx-gl library function test");
+    lbx_gl_version(&major, &minor, &patch, &build);
+    Info_("lbx-gl library function test (version %d.%d.%d build %d)", major, minor, patch, build);
 
     test();
 
