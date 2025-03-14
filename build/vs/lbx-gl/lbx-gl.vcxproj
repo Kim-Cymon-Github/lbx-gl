@@ -109,11 +109,11 @@
       <AdditionalDependencies>lbx-core.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>..\..\..\lbx up -b</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>python ..\..\..\lib\lbx\tool\ver_man.py ..\..\..\src\version.txt BUILD_NUMBER</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -139,11 +139,11 @@
       <AdditionalDependencies>lbx-core.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>..\..\..\lbx up -b</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>python ..\..\..\lib\lbx\tool\ver_man.py ..\..\..\src\version.txt BUILD_NUMBER</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -165,11 +165,11 @@
       <AdditionalDependencies>lbx-core.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>..\..\..\lbx up -b</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>python ..\..\..\lib\lbx\tool\ver_man.py ..\..\..\src\version.txt BUILD_NUMBER</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -195,22 +195,22 @@
       <AdditionalDependencies>lbx-core.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>..\..\..\lbx up -b</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>python ..\..\..\lib\lbx\tool\ver_man.py ..\..\..\src\version.txt BUILD_NUMBER</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\src\lbx_gl.h" />
-    <ClInclude Include="..\..\..\src\lbx_gl_class.h" />
+    <ClInclude Include="..\..\..\gl\src\lbx_gl.h" />
+    <ClInclude Include="..\..\..\src\gl\lbx_gl_class.h" />
     <ClInclude Include="..\..\src\version.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\dllmain.cpp" />
-    <ClCompile Include="..\..\..\src\lbx_gl.c" />
-    <ClCompile Include="..\..\..\src\lbx_gl_class.cpp" />
+    <ClCompile Include="..\..\..\src\gl\lbx_gl.c" />
+    <ClCompile Include="..\..\..\src\gl\lbx_gl_class.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\README.md" />

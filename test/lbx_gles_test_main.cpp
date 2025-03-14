@@ -1,5 +1,5 @@
 ﻿#include <stdio.h>
-#include "lbx_gl_class.h"
+#include "gl/lbx_gl_class.h"
 #define IMPLEMENT_SIMPLE_CONSOLE_LOG_HANDLER
 #include "system/lbx_log.h"
 #include "system/lbx_console.h"
@@ -23,7 +23,6 @@ i32_t main(void)
     Log_("lbx-gl library function test");
 
     test();
-
 
     check_memory_usage(false); // reset
 }

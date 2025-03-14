@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\src\lbx_gl_class.h">
+    <ClInclude Include="..\..\..\src\gl\lbx_gl_class.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\lbx_gl.h">
+    <ClInclude Include="..\..\..\gl\src\lbx_gl.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\version.h">
@@ -29,10 +29,10 @@
     <ClCompile Include="..\..\..\src\dllmain.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\lbx_gl.c">
+    <ClCompile Include="..\..\..\src\gl\lbx_gl.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\lbx_gl_class.cpp">
+    <ClCompile Include="..\..\..\src\gl\lbx_gl_class.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

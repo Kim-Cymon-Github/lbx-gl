@@ -2231,6 +2231,7 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
         GL_CHECK(glGenRenderbuffers(1, &depth)); // Render buffer 할당
         sz = new_size;
         size_changed = (new_size.width * new_size.height != 0);
+        samples = new_samples;
         sample_changed = true;
     } else {
         // 렌더버퍼가 이미 연결돼 있을 수 있으니 먼저 현 렌더버퍼를 분리
@@ -2254,18 +2255,24 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, handle));
 
     if (size_changed || sample_changed) {
-        if (samples == 1) {
-            // 렌더버퍼(깊이버퍼)를 바인딩하고
-            GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, depth));
+        // 렌더버퍼(깊이버퍼)를 바인딩하고
+        GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, depth));
+        if (samples > 1) {
+            // 렌더버퍼(깊이버퍼)의 용량을 재조정 하고
+            GL_CHECK(glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, LBX_GL_DEPTH_COMPONENT, sz.width, sz.height));
+        } else {
             // 렌더버퍼(깊이버퍼)의 용량을 재조정 하고
             GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, LBX_GL_DEPTH_COMPONENT, sz.width, sz.height));
-            // 다시 연결해준다.
-            GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
+        }
+        // 다시 연결해준다.
+        GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
 
-            // 텍스쳐 객체가 없는 경우엔 새로 생성
-            if (tex == NULL) {
-                tex = new TGLTexture2D();
-            }
+        // 텍스쳐 객체가 없는 경우엔 새로 생성
+        if (tex == NULL) {
+            tex = new TGLTexture2D();
+        }
+
+        if (samples == 1) {
             // 텍스쳐를 바인딩하고
             tex->Bind();
             // 파라미터 설정
@@ -2275,7 +2282,15 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
             GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sz.width, sz.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
             GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->GetHandle(), 0)); // 마지막은 mipmap 레벨임
         } else {
+            GL_CHECK(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, tex->GetHandle()));
+            // 파라미터 설정
+            //GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+            //GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
+            static PFNGLTEXSTORAGE2DMULTISAMPLEPROC glTexStorage2DMultisample =
+                (PFNGLTEXSTORAGE2DMULTISAMPLEPROC)eglGetProcAddress("glTexStorage2DMultisample");
+            GL_CHECK(glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA8, sz.width, sz.height, GL_TRUE));
+            GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, tex->GetHandle(), 0));
         }
     }
     // 프레임버퍼 상태 점검
