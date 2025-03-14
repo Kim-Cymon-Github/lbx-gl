@@ -8,6 +8,7 @@
 #include "lbx_gl.h"
 #include "lbx_core.h"
 #include "system/lbx_log.h"
+#include "version.txt"
 
 //---------------------------------------------------------------------------
 #ifdef __BORLANDC__
@@ -74,6 +75,14 @@ const LBEGL_CODE_DESC eglerrorstrings[] = {
     {EGL_BAD_NATIVE_WINDOW, "EGL_BAD_NATIVE_WINDOW"},
     {EGL_CONTEXT_LOST, "EGL_CONTEXT_LOST"},
 };
+
+void lbx_gl_version(i32_t* major, i32_t* minor, i32_t* patch, i32_t* build_number)
+{
+    if (major) { *major = VERSION_MAJOR; }
+    if (minor) { *minor = VERSION_MINOR; }
+    if (patch) { *patch = VERSION_PATCH; }
+    if (build_number) { *build_number = BUILD_NUMBER; }
+}
 
 const char * lbglGetErrorStr(GLenum error_code)
 {

@@ -71,6 +71,8 @@ extern "C" {
 #   define LBX_GL_DEPTH_COMPONENT  GL_DEPTH_COMPONENT16
 #endif
 
+LBX_GL_EXPORT void lbx_gl_version(i32_t* major, i32_t* minor, i32_t* patch, i32_t* build_number);
+
 typedef struct  {
     EGLNativeWindowType  native_window;
     EGLNativeDisplayType native_display;
