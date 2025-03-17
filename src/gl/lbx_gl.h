@@ -60,6 +60,8 @@
 extern "C" {
 #endif //#ifdef __cplusplus
 
+LBX_GL_EXPORT u32_t lbx_gl_version(void);
+
 #define RC_FLAG_OWNS_NATIVE_WINDOW (0x00000001u)
 #define RC_FLAG_OWNS_NATIVE_DISPLAY (0x00000002u)
 
@@ -70,8 +72,6 @@ extern "C" {
 #else
 #   define LBX_GL_DEPTH_COMPONENT  GL_DEPTH_COMPONENT16
 #endif
-
-LBX_GL_EXPORT void lbx_gl_version(i32_t* major, i32_t* minor, i32_t* patch, i32_t* build_number);
 
 typedef struct  {
     EGLNativeWindowType  native_window;

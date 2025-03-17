@@ -15,6 +15,9 @@
 #pragma package(smart_init)
 #endif //#ifdef __BORLANDC__
 
+u32_t lbx_gl_version(void) { return version_(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, BUILD_NUMBER); }
+
+
 #ifdef GLES
     #ifdef IS_WINDOWS
         #pragma comment (lib, "libEGL")
@@ -76,13 +79,6 @@ const LBEGL_CODE_DESC eglerrorstrings[] = {
     {EGL_CONTEXT_LOST, "EGL_CONTEXT_LOST"},
 };
 
-void lbx_gl_version(i32_t* major, i32_t* minor, i32_t* patch, i32_t* build_number)
-{
-    if (major) { *major = VERSION_MAJOR; }
-    if (minor) { *minor = VERSION_MINOR; }
-    if (patch) { *patch = VERSION_PATCH; }
-    if (build_number) { *build_number = BUILD_NUMBER; }
-}
 
 const char * lbglGetErrorStr(GLenum error_code)
 {
