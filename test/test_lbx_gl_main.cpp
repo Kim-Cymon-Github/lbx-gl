@@ -6,7 +6,7 @@
 #include "lbx_core.h"
 #include "system/lbx_file.h"
 
-#include "lbx_gles_test_routines.h"
+#include "test_lbx_gl_routines.h"
 
 #pragma comment (lib, "lbx-gl.lib")
 #pragma comment (lib, "lbx-core.lib")

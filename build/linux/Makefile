@@ -10,7 +10,7 @@ OBJS=\
 EXT_OBJS=\
 
 TEST_OBJS=\
-	lbx_gles_test_main.o \
+	test_lbx_gl_main.o \
 
 TARGET = lib$(NAME).so
 STATIC_TARGET = lib$(NAME).a
@@ -89,7 +89,7 @@ run: $(TARGET) $(TEST_TARGET)
 	LD_LIBRARY_PATH=$(OUT_PATH):$$LD_LIBRARY_PATH ./$(TEST_TARGET)
 
 #TEST_OBJS
-lbx_gles_test_main.o: ../../test/lbx_gles_test_main.cpp
+test_lbx_gl_main.o: ../../test/test_lbx_gl_main.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 #OBJS

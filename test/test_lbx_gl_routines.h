@@ -1,5 +1,5 @@
-﻿#ifndef lbx_gles_test_routinesH
-#define lbx_gles_test_routinesH
+﻿#ifndef test_lbx_gl_routinesH
+#define test_lbx_gl_routinesH
 
 #include "lbx_type.h"
 #include "gl/lbx_gl.h"
@@ -44,5 +44,5 @@ i32_t test(void)
     return 0;
 }
 
-#endif //#ifndef lbx_gles_test_routinesH
+#endif //#ifndef test_lbx_gl_routinesH
 
