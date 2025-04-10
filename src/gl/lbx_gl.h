@@ -88,8 +88,43 @@ LBX_GL_EXPORT i32_t RC_Free(LBX_RENDER_CONTEXT *ctx);
 lbx_inline bool RC_MakeCurrent(const LBX_RENDER_CONTEXT* ctx) { return eglGetCurrentContext() == ctx->egl_context ? true : (bool)eglMakeCurrent(ctx->egl_display, ctx->egl_surface, ctx->egl_surface, ctx->egl_context); }
 lbx_inline bool RC_SwapBuffers(const LBX_RENDER_CONTEXT *ctx) { return (bool)eglSwapBuffers(ctx->egl_display, ctx->egl_surface);}
 
-LBX_GL_EXPORT const char * lbglGetErrorStr(GLenum error_code);
-LBX_GL_EXPORT const char * lbeglGetErrorStr(EGLint error_code);
+LBX_GL_EXPORT const char * lbxGlGetErrorStr(GLenum error_code);
+LBX_GL_EXPORT const char*  lbxEglGetErrorStr(EGLint error_code);
+
+#if defined(ENABLE_GL_CHECK)
+//#define GL_CHECK(aaa) aaa; {GLint _err = glGetError(); if (_err != GL_NO_ERROR) Err_("gl_assert! " #aaa " failed: %s", lbglGetErrorStr(_err));}
+#define GL_CHECK_READY do { \
+    GLint _err = glGetError();  \
+    if (_err != GL_NO_ERROR) { \
+        Err_("GL_CHECK - %s", lbxGlGetErrorStr(_err)); \
+    } \
+} while (0)
+
+#define GL_CHECK(...) do { \
+    GLint _err; \
+    __VA_ARGS__; \
+    _err = glGetError(); \
+    if (_err != GL_NO_ERROR) { \
+        Err_("GL_CHECK(" #__VA_ARGS__ ") failed: %s", lbxGlGetErrorStr(_err)); \
+    } \
+} while (0)
+
+#else //#if defined(ENABLE_GL_ASSERT)
+#define GL_CHECK_READY do {} while(0)
+#define GL_CHECK(...) __VA_ARGS__
+#endif //#else #if defined(ENABLE_GL_ASSERT)
+
+/**
+ * @brief Saves current buffer binding and binds the new buffer
+ * @return Previously bound buffer
+ */
+LBX_GL_EXPORT GLuint lbxGlBindBuffer(GLenum target, GLuint buffer);
+
+/**
+ * @brief Restores previous buffer binding if needed
+ */
+LBX_GL_EXPORT void lbxGlRestoreBufferBinding(GLenum target, GLuint previous_binding, GLuint current_binding);
+
 
 
 /**
@@ -108,29 +143,6 @@ LBX_GL_EXPORT const char * lbeglGetErrorStr(EGLint error_code);
  * @return The number of textures that were successfully bound.
  */
 LBX_GL_EXPORT i32_t LBX_IMAGE_BindTextures(const LBX_IMAGE* self);
-
-#if defined(ENABLE_GL_CHECK)
-//#define GL_CHECK(aaa) aaa; {GLint _err = glGetError(); if (_err != GL_NO_ERROR) Err_("gl_assert! " #aaa " failed: %s", lbglGetErrorStr(_err));}
-#define GL_CHECK_READY do { \
-    GLint _err = glGetError();  \
-    if (_err != GL_NO_ERROR) { \
-        Err_("GL_CHECK - %s", lbglGetErrorStr(_err)); \
-    } \
-} while (0)
-
-#define GL_CHECK(...) do { \
-    GLint _err; \
-    __VA_ARGS__; \
-    _err = glGetError(); \
-    if (_err != GL_NO_ERROR) { \
-        Err_("GL_CHECK(" #__VA_ARGS__ ") failed: %s", lbglGetErrorStr(_err)); \
-    } \
-} while (0)
-
-#else //#if defined(ENABLE_GL_ASSERT)
-#define GL_CHECK_READY do {} while(0)
-#define GL_CHECK(...) __VA_ARGS__
-#endif //#else #if defined(ENABLE_GL_ASSERT)
 
 #ifdef __cplusplus
 }

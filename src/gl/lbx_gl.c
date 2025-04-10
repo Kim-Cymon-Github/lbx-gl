@@ -80,7 +80,7 @@ const LBEGL_CODE_DESC eglerrorstrings[] = {
 };
 
 
-const char * lbglGetErrorStr(GLenum error_code)
+const char * lbxGlGetErrorStr(GLenum error_code)
 {
     const char *ret = NULL;
     i32_t i;
@@ -92,7 +92,7 @@ const char * lbglGetErrorStr(GLenum error_code)
     }
     return ret;
 }
-const char * lbeglGetErrorStr(EGLint error_code)
+const char * lbxEglGetErrorStr(EGLint error_code)
 {
     const char *ret = NULL;
     i32_t i;
@@ -114,7 +114,7 @@ void LBX_RENDER_CONTEXT_Init(LBX_RENDER_CONTEXT* self, EGLNativeWindowType nativ
     self->egl_surface = EGL_NO_SURFACE;
 }
 /*
-static void * lbglSetWindowStyles(NativeWindowType h_wnd)
+static void * lbxglSetWindowStyles(NativeWindowType h_wnd)
 {
 #ifdef _WIN32
     LONG_PTR lpStyle = GetWindowLongPtrW(h_wnd, GWL_STYLE);
@@ -196,7 +196,7 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
             Log_("egl_display = %p", ctx->egl_display);
         } else {
             err = eglGetError();
-            Err_("eglGetDisplay(%p) failed: %s", ctx->native_display, lbeglGetErrorStr(err));
+            Err_("eglGetDisplay(%p) failed: %s", ctx->native_display, lbxEglGetErrorStr(err));
             return err;
         }
     }
@@ -207,7 +207,7 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
             Log_("EGL %d.%d initialized successfully", majorVersion, minorVersion);
         } else {
             err = eglGetError();
-            Err_("eglInitialize() failed: %s", lbeglGetErrorStr(err));
+            Err_("eglInitialize() failed: %s", lbxEglGetErrorStr(err));
             return err;
         }
         const char* version = eglQueryString(ctx->egl_display, EGL_VERSION);
@@ -222,7 +222,7 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
             configs = (EGLConfig*)alloc_memory(sizeof(EGLConfig) * numConfigs);
         } else {
             err = eglGetError();
-            Err_("eglGetConfigs failed: %s", lbeglGetErrorStr(err));
+            Err_("eglGetConfigs failed: %s", lbxEglGetErrorStr(err));
         }
 
         if (err == EGL_SUCCESS) {
@@ -241,7 +241,7 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
                 }
             } else {
                 err = eglGetError();
-                Err_("eglChooseConfig failed: %s", lbeglGetErrorStr(err));
+                Err_("eglChooseConfig failed: %s", lbxEglGetErrorStr(err));
             }
         }
 
@@ -254,12 +254,12 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
                     Log_("EGL surface %p created based on EGLConfig %d (idx=%d)", ctx->egl_surface, configs[selected_config], selected_config);
                     break;
                 } else {
-                    Log_("  EGLConfig %d failed - %s", selected_config, lbeglGetErrorStr(err));
+                    Log_("  EGLConfig %d failed - %s", selected_config, lbxEglGetErrorStr(err));
                 }
             }
 
             if (EGL_NO_SURFACE == ctx->egl_surface) {
-                Err_("eglCreateWindowSurface() failed: %s", lbeglGetErrorStr(err));
+                Err_("eglCreateWindowSurface() failed: %s", lbxEglGetErrorStr(err));
             }
         }
 
@@ -270,7 +270,7 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
                 Log_("EGL context created: 0x%x", ctx->egl_context);
             } else {
                 err = eglGetError();
-                Err_("eglCreateContext failed: %s", lbeglGetErrorStr(err));
+                Err_("eglCreateContext failed: %s", lbxEglGetErrorStr(err));
             }
         }
         free_memory(configs);
@@ -282,7 +282,7 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
     if (err == EGL_SUCCESS) {
         if (!RC_MakeCurrent(ctx)) {
             err = eglGetError();
-            Err_("eglMakeCurrent failed: %s", lbeglGetErrorStr(err));
+            Err_("eglMakeCurrent failed: %s", lbxEglGetErrorStr(err));
         }
     }
 
@@ -296,7 +296,7 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
     //	Log_("eglSwapInterval(%d)", LBX_SWAP_INTERVAL);
         if (!eglSwapInterval(ctx->egl_display, LBX_SWAP_INTERVAL)) {
             err = eglGetError();
-            Err_("eglSwapInterval(%d) failed: %s", LBX_SWAP_INTERVAL, lbeglGetErrorStr(err));
+            Err_("eglSwapInterval(%d) failed: %s", LBX_SWAP_INTERVAL, lbxEglGetErrorStr(err));
         }
         
     }
@@ -324,7 +324,7 @@ i32_t RC_Free(LBX_RENDER_CONTEXT *ctx)
         if (EGL_TRUE == eglDestroyContext(ctx->egl_display, ctx->egl_context)) {
             ctx->egl_context = EGL_NO_CONTEXT;
         } else {
-            Err_("eglDestroyContext failed: %s", lbeglGetErrorStr(eglGetError()));
+            Err_("eglDestroyContext failed: %s", lbxEglGetErrorStr(eglGetError()));
         }
     }
 
@@ -332,7 +332,7 @@ i32_t RC_Free(LBX_RENDER_CONTEXT *ctx)
         if (EGL_TRUE == eglDestroySurface(ctx->egl_display, ctx->egl_surface)) {
             ctx->egl_surface = EGL_NO_SURFACE;
         } else {
-            Err_("eglDestroySurface failed: %s", lbeglGetErrorStr(eglGetError()));
+            Err_("eglDestroySurface failed: %s", lbxEglGetErrorStr(eglGetError()));
         }
     }
 
@@ -340,7 +340,7 @@ i32_t RC_Free(LBX_RENDER_CONTEXT *ctx)
         if (EGL_TRUE == eglTerminate(ctx->egl_display)) {
             ctx->egl_display = EGL_NO_DISPLAY;
         } else {
-            Err_("eglTerminate failed: %s", lbeglGetErrorStr(eglGetError()));
+            Err_("eglTerminate failed: %s", lbxEglGetErrorStr(eglGetError()));
         }
 
 #ifdef _WIN32
@@ -390,4 +390,50 @@ i32_t LBX_IMAGE_BindTextures(const LBX_IMAGE* self)
 
     // 바인딩된 텍스처 개수를 반환
     return ret;
+}
+
+
+/**
+ * @brief Saves current buffer binding and binds the new buffer
+ * @return Previously bound buffer
+ */
+GLuint lbxGlBindBuffer(GLenum target, GLuint buffer) 
+{
+    GLint prev_binding = 0;
+
+    // Get current binding
+    switch (target) {
+    case GL_ARRAY_BUFFER:
+        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev_binding);
+        break;
+    case GL_ELEMENT_ARRAY_BUFFER:
+        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &prev_binding);
+        break;
+#if GLES >= 30
+    case GL_UNIFORM_BUFFER:
+        glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &prev_binding);
+        break;
+#endif
+#if GLES >= 31
+    case GL_SHADER_STORAGE_BUFFER:
+        glGetIntegerv(GL_SHADER_STORAGE_BUFFER_BINDING, &prev_binding);
+        break;
+#endif
+    }
+
+    // Bind the new buffer if different
+    if ((GLuint)prev_binding != buffer) {
+        GL_CHECK(glBindBuffer(target, buffer));
+    }
+
+    return (GLuint)prev_binding;
+}
+
+/**
+ * @brief Restores previous buffer binding if needed
+ */
+void lbxGlRestoreBufferBinding(GLenum target, GLuint previous_binding, GLuint current_binding) {
+    if (previous_binding != current_binding) {
+        GL_CHECK(glBindBuffer(target, previous_binding));
+    }
 }
