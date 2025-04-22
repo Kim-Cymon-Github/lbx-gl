@@ -109,10 +109,10 @@ LBX_GL_EXPORT const char*  lbxEglGetErrorStr(EGLint error_code);
     } \
 } while (0)
 
-#else //#if defined(ENABLE_GL_ASSERT)
+#else //#if defined(ENABLE_GL_CHECK)
 #define GL_CHECK_READY do {} while(0)
 #define GL_CHECK(...) __VA_ARGS__
-#endif //#else #if defined(ENABLE_GL_ASSERT)
+#endif //#else #if defined(ENABLE_GL_CHECK)
 
 /**
  * @brief Saves current buffer binding and binds the new buffer

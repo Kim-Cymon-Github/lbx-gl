@@ -1,8 +1,8 @@
 ﻿//---------------------------------------------------------------------------
 
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif //#ifdef __BORLANDC__
+#if defined(__BORLANDC__)
+#   pragma hdrstop
+#endif
 
 #include "lbx_gl_class.h"
 #include "GLES2/gl2ext.h"
@@ -12,9 +12,9 @@
 #include "image/lbx_image.h"
 
 //---------------------------------------------------------------------------
-#ifdef __BORLANDC__
-#pragma package(smart_init)
-#endif //#ifdef __BORLANDC__
+#if defined(__BORLANDC__)
+#   pragma package(smart_init)
+#endif
 
 UString GetGLStringData(GLuint obj, i32_t length, TGLGetStringFunc func)
 {
@@ -92,9 +92,9 @@ size_t stream_read_glprogram(LBX_STREAM *s, GLuint h_prog, GLenum* bin_format)
     if (r > 0) {
         void * tmp = svec_alloc(payload_size, 1);
         r += stream_read(s, tmp, payload_size);
-        GL_CHECK(glProgramBinaryOES(h_prog, (GLenum)bf, tmp, payload_size));
+        GL_CHECK(glProgramBinaryOES(h_prog, (GLenum)bf, tmp, (GLint)payload_size));
         if (bin_format) {
-            *bin_format = bf;
+            *bin_format = (GLenum)bf;
         }
     }
     return r;
@@ -292,20 +292,20 @@ i32_t TGLTexture2D::SetImage(const LBX_IMAGE *img, i32_t target)
 
 static inline void xywh_to_rect(rect_f32 *dst, i32_t x, i32_t y, i32_t width, i32_t height, size2_i16 res)
 {
-    vec2_f32 sc = vec2_f32_(1.0f / (float)res.width, 1.0f / (float)res.height);
-    dst->left = (float)x * sc.x;
-    dst->top = 1.0f - ((float)y * sc.y);
-    dst->right = (float)(x + width) * sc.x;
-    dst->bottom = 1.0f - ((float)(y + height) * sc.y);
+    vec2_f32 sc = vec2_f32_(1.0f / (f32_t)res.width, 1.0f / (f32_t)res.height);
+    dst->left = (f32_t)x * sc.x;
+    dst->top = 1.0f - ((f32_t)y * sc.y);
+    dst->right = (f32_t)(x + width) * sc.x;
+    dst->bottom = 1.0f - ((f32_t)(y + height) * sc.y);
 }
 
 static inline void rect_normalize(rect_f32 *out, rect_i16 in, size2_i16 res)
 {
-    vec2_f32 sc  = vec2_f32_(1.0f / (float)res.width, 1.0f / (float)res.height);
-    out->left   = (float)in.left   * sc.x;
-    out->top    = (float)in.top    * sc.y;
-    out->right  = (float)in.right  * sc.x;
-    out->bottom = (float)in.bottom * sc.y;
+    vec2_f32 sc  = vec2_f32_(1.0f / (f32_t)res.width, 1.0f / (f32_t)res.height);
+    out->left   = (f32_t)in.left   * sc.x;
+    out->top    = (f32_t)in.top    * sc.y;
+    out->right  = (f32_t)in.right  * sc.x;
+    out->bottom = (f32_t)in.bottom * sc.y;
 }
 
 u8_t idx_rect_triangles[] = {0,2,1,2,3,1};
@@ -441,8 +441,8 @@ i32_t TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, i32_t target_strid
 
 
     if (border) {
-        *p[ 5] = vec2_f32_(p[ 0]->x + border->left * (float)res.width * scale.x, p[ 0]->y + border->top * (float)res.height * scale.y);
-        *p[10] = vec2_f32_(p[15]->x + border->right * (float)res.width * scale.x, p[15]->y + border->bottom * (float)res.height * scale.y);
+        *p[ 5] = vec2_f32_(p[ 0]->x + border->left * (f32_t)res.width * scale.x, p[ 0]->y + border->top * (f32_t)res.height * scale.y);
+        *p[10] = vec2_f32_(p[15]->x + border->right * (f32_t)res.width * scale.x, p[15]->y + border->bottom * (f32_t)res.height * scale.y);
 
         *p[ 1] = vec2_f32_(p[ 5]->x, p[0]->y);
         *p[ 2] = vec2_f32_(p[10]->x, p[0]->y);
@@ -922,7 +922,7 @@ i32_t TGLProgram::LoadBinary(const void *data, size_t size, GLenum bin_format)
     static PFNGLPROGRAMBINARYOESPROC glProgramBinaryOES = (PFNGLPROGRAMBINARYOESPROC)eglGetProcAddress("glProgramBinaryOES");
     #endif //#ifndef GL_GLEXT_PROTOTYPES
     flags &= ~(u32_t)pfLinked;
-    glProgramBinaryOES(GetHandle(), bin_format, data, size);
+    glProgramBinaryOES(GetHandle(), bin_format, data, (GLint)size);
     if (glGetError() == GL_NO_ERROR) {
         flags |= (u32_t)pfLinked;
         Analyze();
@@ -1244,28 +1244,28 @@ void TGLProgram::Attribute(GLint attrib_loc, GLint components, GLenum component_
 void TGLProgram::Attribute(GLint attrib_loc, vec4_u8 data)
 {
     GL_CHECK(glDisableVertexAttribArray(attrib_loc));
-    vec4_f32 n = vec4_f32_((float)data.x / 255.0f, (float)data.y / 255.0f, (float)data.z / 255.0f, (float)data.w / 255.0f);
-    GL_CHECK(glVertexAttrib4fv(attrib_loc, (float*)&n));
+    vec4_f32 n = vec4_f32_((f32_t)data.x / 255.0f, (f32_t)data.y / 255.0f, (f32_t)data.z / 255.0f, (f32_t)data.w / 255.0f);
+    GL_CHECK(glVertexAttrib4fv(attrib_loc, (f32_t*)&n));
 }
 //---------------------------------------------------------------------------
-i32_t TGLProgram::Uniform(GLint uniform_loc, const float *data, i32_t count)
+i32_t TGLProgram::Uniform(GLint uniform_loc, const f32_t *data, i32_t count)
 {
     Use(); GL_CHECK(glUniform1fv(uniform_loc, count, data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const vec2_f32 *data, i32_t count)
 {
-    Use(); GL_CHECK(glUniform2fv(uniform_loc, count, (float*)data)); return 1;
+    Use(); GL_CHECK(glUniform2fv(uniform_loc, count, (f32_t*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const vec3_f32 *data, i32_t count)
 {
-    Use(); GL_CHECK(glUniform3fv(uniform_loc, count, (float*)data)); return 1;
+    Use(); GL_CHECK(glUniform3fv(uniform_loc, count, (f32_t*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const vec4_f32 *data, i32_t count)
 {
-    Use(); GL_CHECK(glUniform4fv(uniform_loc, count, (float*)data)); return 1;
+    Use(); GL_CHECK(glUniform4fv(uniform_loc, count, (f32_t*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const i32_t *data, i32_t count)
@@ -1290,17 +1290,17 @@ i32_t TGLProgram::Uniform(GLint uniform_loc, const vec4_i32 *data, i32_t count)
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const mat2_f32 *data, i32_t count)
 {
-    Use(); GL_CHECK(glUniformMatrix2fv(uniform_loc, count, GL_FALSE, (float*)data)); return 1;
+    Use(); GL_CHECK(glUniformMatrix2fv(uniform_loc, count, GL_FALSE, (f32_t*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const mat3_f32 *data, i32_t count)
 {
-    Use(); GL_CHECK(glUniformMatrix3fv(uniform_loc, count, GL_FALSE, (float*)data)); return 1;
+    Use(); GL_CHECK(glUniformMatrix3fv(uniform_loc, count, GL_FALSE, (f32_t*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, const mat4_f32 *data, i32_t count)
 {
-    Use(); GL_CHECK(glUniformMatrix4fv(uniform_loc, count, GL_FALSE, (float*)data)); return 1;
+    Use(); GL_CHECK(glUniformMatrix4fv(uniform_loc, count, GL_FALSE, (f32_t*)data)); return 1;
 }
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, LBX_TYPE type, const void *data, i32_t count)
@@ -1318,7 +1318,7 @@ i32_t TGLProgram::Uniform(GLint uniform_loc, LBX_TYPE type, const void *data, i3
                 }
             } else {
                 switch (LBX_TYPE_DIMENSION(type)) {
-                    case 1: return Uniform(uniform_loc, (float*)data, count);
+                    case 1: return Uniform(uniform_loc, (f32_t*)data, count);
                     case 2: return Uniform(uniform_loc, (vec2_f32*)data, count);
                     case 3: return Uniform(uniform_loc, (vec3_f32*)data, count);
                     case 4: return Uniform(uniform_loc, (vec4_f32*)data, count);
@@ -1529,7 +1529,7 @@ TGLAttribBuffer::~TGLAttribBuffer()
 
 bool TGLAttribBuffer::Register(const char* struct_id)
 {
-    i32_t i, len = strlen(struct_id);
+    i32_t i, len = (i32_t)strlen(struct_id);
     u8_t attrib_type;
     LBX_TYPE data_type;
     i32_t size;
@@ -1959,7 +1959,7 @@ LBX_RENDER_COMMAND * TGLCommandList::Add(GLenum method, LBX_TYPE type, i32_t cou
     LBX_RENDER_COMMAND * r = Add(method, visible);
     r->type = gltype;
     r->count = count;
-    svec_set_length((void**)(&(r->indice)), count, LBX_TYPE_ELEM_SIZE(type));
+    svec_set_length((void**)(&(r->indice)), count, (u16_t)LBX_TYPE_ELEM_SIZE(type));
     return r;
 }
 LBX_RENDER_COMMAND * TGLCommandList::Add(GLenum method, GLuint indice_buffer_id, GLenum elem_type,  i32_t count, bool *visible)
@@ -2068,7 +2068,7 @@ void TGLDrawList::FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, u32_t colo
     for (i32_t i = 0; i < icnt; i++) {
         idx[i] = base + indice[i];
     }
-*/	modified = true;
+*/    modified = true;
 }
 //---------------------------------------------------------------------------
 i32_t TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)

@@ -1,9 +1,9 @@
 ﻿//---------------------------------------------------------------------------
 #include <stdlib.h>
 #include <string.h>
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif //#ifdef __BORLANDC__
+#if defined(__BORLANDC__)
+#   pragma hdrstop
+#endif
 
 #include "lbx_gl.h"
 #include "lbx_core.h"
@@ -11,9 +11,9 @@
 #include "version.txt"
 
 //---------------------------------------------------------------------------
-#ifdef __BORLANDC__
-#pragma package(smart_init)
-#endif //#ifdef __BORLANDC__
+#if defined(__BORLANDC__)
+#   pragma package(smart_init)
+#endif
 
 u32_t lbx_gl_version(void) { return version_(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, BUILD_NUMBER); }
 
@@ -49,10 +49,10 @@ const LBGL_CODE_DESC glerrorstrings[] = {
     {GL_INVALID_FRAMEBUFFER_OPERATION, "GL_INVALID_FRAMEBUFFER_OPERATION"},
     {GL_OUT_OF_MEMORY, "GL_OUT_OF_MEMORY"},
 #ifdef GL_STACK_UNDERFLOW
-	{GL_STACK_UNDERFLOW, "GL_STACK_UNDERFLOW"},
+    {GL_STACK_UNDERFLOW, "GL_STACK_UNDERFLOW"},
 #endif //#ifdef GL_STACK_UNDERFLOW
 #ifdef GL_STACK_OVERFLOW
-	{GL_STACK_OVERFLOW, "GL_STACK_OVERFLOW"},
+    {GL_STACK_OVERFLOW, "GL_STACK_OVERFLOW"},
 #endif //#ifdef GL_STACK_OVERFLOW
 };
 
@@ -142,8 +142,8 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
         EGL_ALPHA_SIZE,              LBX_GL_COLOR_BITS,
         EGL_COLOR_BUFFER_TYPE,       EGL_RGB_BUFFER,
         EGL_RENDERABLE_TYPE,         LBX_RENDERABLE_TYPE,     //
-//		EGL_CONFIG_CAVEAT,           EGL_DONT_CARE,
-//		EGL_CONFIG_ID,               EGL_DONT_CARE,
+//        EGL_CONFIG_CAVEAT,           EGL_DONT_CARE,
+//        EGL_CONFIG_ID,               EGL_DONT_CARE,
 
         EGL_DEPTH_SIZE,              LBX_GL_DEPTH_BITS,
 
@@ -151,7 +151,7 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
         EGL_MAX_SWAP_INTERVAL,       EGL_DONT_CARE,
         EGL_MIN_SWAP_INTERVAL,       EGL_DONT_CARE,
         EGL_NATIVE_RENDERABLE,       EGL_DONT_CARE,
-//		EGL_NATIVE_VISUAL_TYPE,      EGL_DONT_CARE, // MALI Emulator에서 오류 발생
+//        EGL_NATIVE_VISUAL_TYPE,      EGL_DONT_CARE, // MALI Emulator에서 오류 발생
         EGL_SAMPLE_BUFFERS,          1, //0, // 1
         EGL_SAMPLES,                 4, //0, // 4
         EGL_STENCIL_SIZE,            0, //0
@@ -180,15 +180,15 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
     if (ctx->egl_display == EGL_NO_DISPLAY) {
         // 외부에서 egl_display를 제공하지 않았으므로 기본적인 방법으로 취득을 시도한다.
 #ifdef _WIN32
-		if (g_desktop_dc == 0) {
-			g_desktop_dc = GetDC(NULL);
+        if (g_desktop_dc == 0) {
+            g_desktop_dc = GetDC(NULL);
             if (NULL == g_desktop_dc) {
                 Err_("GetDC(NULL) failed");
                 return EGL_BAD_DISPLAY;
             }
         }
-		if (EGL_DEFAULT_DISPLAY == ctx->native_display) { // 별도로 native_display를 지정하지 않았으면
-        	ctx->native_display = g_desktop_dc; // 멀티윈도우 지원을 위해 EGL_DEFAULT_DISPLAY를 사용하지 않고 Desktop window를 사용함
+        if (EGL_DEFAULT_DISPLAY == ctx->native_display) { // 별도로 native_display를 지정하지 않았으면
+            ctx->native_display = g_desktop_dc; // 멀티윈도우 지원을 위해 EGL_DEFAULT_DISPLAY를 사용하지 않고 Desktop window를 사용함
         }
 #endif //#ifdef _WIN32
         ctx->egl_display = eglGetDisplay(ctx->native_display);
@@ -277,7 +277,7 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
     }
 
 
-//	Log_("eglMakeCurrent");
+//    Log_("eglMakeCurrent");
     // Make the context current
     if (err == EGL_SUCCESS) {
         if (!RC_MakeCurrent(ctx)) {
@@ -293,7 +293,7 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
             #define LBX_SWAP_INTERVAL 1
         #endif //#else #ifdef MAX_PERFORMANCE_CHECK
 
-    //	Log_("eglSwapInterval(%d)", LBX_SWAP_INTERVAL);
+    //    Log_("eglSwapInterval(%d)", LBX_SWAP_INTERVAL);
         if (!eglSwapInterval(ctx->egl_display, LBX_SWAP_INTERVAL)) {
             err = eglGetError();
             Err_("eglSwapInterval(%d) failed: %s", LBX_SWAP_INTERVAL, lbxEglGetErrorStr(err));
@@ -303,9 +303,9 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
 
 
 
-//	glClearColor(1,0,0,1);
-//	glClear(GL_COLOR_BUFFER_BIT);
-//	RC_SwapBuffers(ctx);
+//    glClearColor(1,0,0,1);
+//    glClear(GL_COLOR_BUFFER_BIT);
+//    RC_SwapBuffers(ctx);
 
     return err;
 }
@@ -314,10 +314,10 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
 i32_t RC_Free(LBX_RENDER_CONTEXT *ctx)
 {
     i32_t ret = 0;
-//	if (EGL_NO_DISPLAY != ctx->egl_display) {
-//		if (!RC_MakeCurrent(ctx)) {
-//			Err_("eglMakeCurrent failed");
-//		}
+//    if (EGL_NO_DISPLAY != ctx->egl_display) {
+//        if (!RC_MakeCurrent(ctx)) {
+//            Err_("eglMakeCurrent failed");
+//        }
     ret = interlocked_decrement(&gles_instances);
     
     if (EGL_NO_CONTEXT != ctx->egl_context) {
@@ -344,14 +344,14 @@ i32_t RC_Free(LBX_RENDER_CONTEXT *ctx)
         }
 
 #ifdef _WIN32
-		if (g_desktop_dc != 0) {
-    		ReleaseDC(NULL, g_desktop_dc);
-		}
+        if (g_desktop_dc != 0) {
+            ReleaseDC(NULL, g_desktop_dc);
+        }
 #endif //#ifdef _WIN32
     }
 
     Log_("RC_Free done");
-//	}
+//    }
     // 현재 Render Context Free 시 남은 인스턴스 갯수를 반환
     // 멀티윈도우 대응 및 싱글 윈도우 대응 코드
     return ret;
@@ -370,7 +370,7 @@ i32_t LBX_IMAGE_BindTextures(const LBX_IMAGE* self)
         // 현재 평면의 텍스처 값이 0이 아니면 텍스처가 존재함
         if (p[i].texture != 0) {
             // 텍스처 값을 가져옴
-            GLint tx = p[i].texture;
+            GLint tx = (GLint)p[i].texture;
             // 해당 인덱스의 텍스처 유닛을 활성화 (GL_TEXTURE0 + i)
             GL_CHECK(glActiveTexture(GL_TEXTURE0 + i));
             // 텍스처 값이 양수이면 GL_TEXTURE_2D 대상에 바인딩

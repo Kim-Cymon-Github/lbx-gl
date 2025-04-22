@@ -2,9 +2,9 @@
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN 
 #include <windows.h>
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif //#ifdef __BORLANDC__
+#if defined(__BORLANDC__)
+#   pragma hdrstop
+#endif
 #pragma comment (lib, "lbx-core")
 
 BOOL APIENTRY DllMain( HMODULE hModule,

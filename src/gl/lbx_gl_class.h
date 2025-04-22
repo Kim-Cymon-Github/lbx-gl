@@ -217,7 +217,7 @@ public:
     #endif //#else #ifdef _DEBUG
     inline GLint GetUniformLocation(const char *name) {return glGetUniformLocation(GetHandle(), name);}
 
-//	AttributeDescriptor GetAttributeInfoByType(TGLAttributeType type, i16_t num = 0);
+//    AttributeDescriptor GetAttributeInfoByType(TGLAttributeType type, i16_t num = 0);
     i32_t LocationOfAttribType(u8_t type);
     void SetAttributeType(i32_t location, u8_t type);
     inline void SetAttributeType(const char *attribute_name, u8_t type) { SetAttributeType(GetAttribLocation(attribute_name), type); }
@@ -256,7 +256,7 @@ public:
     inline void Use(void) {glUseProgram(GetHandle());}
 
     i32_t Uniform(GLint uniform_loc, LBX_TYPE type, const void *data, i32_t count = 1);
-    i32_t Uniform(GLint uniform_loc, const float *data, i32_t count = 1);
+    i32_t Uniform(GLint uniform_loc, const f32_t *data, i32_t count = 1);
     i32_t Uniform(GLint uniform_loc, const vec2_f32 *data, i32_t count = 1);
     i32_t Uniform(GLint uniform_loc, const vec3_f32 *data, i32_t count = 1);
     i32_t Uniform(GLint uniform_loc, const vec4_f32 *data, i32_t count = 1);
@@ -268,7 +268,7 @@ public:
     i32_t Uniform(GLint uniform_loc, const mat3_f32 *data, i32_t count = 1);
     i32_t Uniform(GLint uniform_loc, const mat4_f32 *data, i32_t count = 1);
 
-    inline i32_t Uniform(const char *name, const float *data, i32_t count = 1) {return Uniform(GetUniformLocation(name), data, count);}
+    inline i32_t Uniform(const char *name, const f32_t *data, i32_t count = 1) {return Uniform(GetUniformLocation(name), data, count);}
     inline i32_t Uniform(const char *name, const vec2_f32 *data, i32_t count = 1) {return Uniform(GetUniformLocation(name), data, count);}
     inline i32_t Uniform(const char *name, const vec3_f32 *data, i32_t count = 1) {return Uniform(GetUniformLocation(name), data, count);}
     inline i32_t Uniform(const char *name, const vec4_f32 *data, i32_t count = 1) {return Uniform(GetUniformLocation(name), data, count);}
@@ -296,10 +296,10 @@ public:
     inline void Attribute(const char *name, const vec4_u8  *data, i32_t stride = 0) {Attribute(GetAttribLocation(name), data, stride);}
 
     // 고정값으로 지정하는 경우
-    inline void Attribute(GLint attrib_loc, f32_t    data) {glDisableVertexAttribArray(attrib_loc); glVertexAttrib1fv(attrib_loc, (float*)&data);}
-    inline void Attribute(GLint attrib_loc, vec2_f32 data) {glDisableVertexAttribArray(attrib_loc); glVertexAttrib2fv(attrib_loc, (float*)&data);}
-    inline void Attribute(GLint attrib_loc, vec3_f32 data) {glDisableVertexAttribArray(attrib_loc); glVertexAttrib3fv(attrib_loc, (float*)&data);}
-    inline void Attribute(GLint attrib_loc, vec4_f32 data) {glDisableVertexAttribArray(attrib_loc); glVertexAttrib4fv(attrib_loc, (float*)&data);}
+    inline void Attribute(GLint attrib_loc, f32_t    data) {glDisableVertexAttribArray(attrib_loc); glVertexAttrib1fv(attrib_loc, (f32_t*)&data);}
+    inline void Attribute(GLint attrib_loc, vec2_f32 data) {glDisableVertexAttribArray(attrib_loc); glVertexAttrib2fv(attrib_loc, (f32_t*)&data);}
+    inline void Attribute(GLint attrib_loc, vec3_f32 data) {glDisableVertexAttribArray(attrib_loc); glVertexAttrib3fv(attrib_loc, (f32_t*)&data);}
+    inline void Attribute(GLint attrib_loc, vec4_f32 data) {glDisableVertexAttribArray(attrib_loc); glVertexAttrib4fv(attrib_loc, (f32_t*)&data);}
     inline void Attribute(const char *name, f32_t    data) {Attribute(GetAttribLocation(name), data);}
     inline void Attribute(const char *name, vec2_f32 data) {Attribute(GetAttribLocation(name), data);}
     inline void Attribute(const char *name, vec3_f32 data) {Attribute(GetAttribLocation(name), data);}
@@ -392,9 +392,9 @@ protected:
 
 
     enum TGlyphFlags {
-        gfHasHole = 0x01,
-        gfHasAlign = 0x02,
-        gfHasBorder = 0x04
+        gfHasHole = 0x01u,
+        gfHasAlign = 0x02u,
+        gfHasBorder = 0x04u
     };
     vec2_f32 *tex_coord;
 public:
@@ -487,7 +487,7 @@ LBX_GL_EXPORT LBX_GL_TYPE GetGLTypeInfo(LBX_TYPE type);
 class LBX_GL_EXPORT TGLAttribBuffer : public TGLBufferBase
 {
 protected:
-//	const LBX_REFL_STRUCT_INFO *ti;
+//    const LBX_REFL_STRUCT_INFO *ti;
     LBX_BUFFER_DESCRIPTOR *bd;
 public:
     TGLAttribBuffer();
@@ -499,7 +499,7 @@ public:
     inline i32_t Size(void) {return GetIntParam(GL_ARRAY_BUFFER, GL_BUFFER_SIZE);}
     inline GLenum Usage(void) {return GetIntParam(GL_ARRAY_BUFFER, GL_BUFFER_USAGE);}
 
-//	SetTypeInfo(const LBX_REFL_STRUCT_INFO *typeinfo);
+//    SetTypeInfo(const LBX_REFL_STRUCT_INFO *typeinfo);
 
     i32_t Register(const LBX_REFL_STRUCT_INFO *rtti);
     TGLAttribBuffer & Register(char attrib_type, LBX_TYPE data_type, u16_t offset);
@@ -599,25 +599,25 @@ public:
 
 
     //void glVertexAttribPointer(GLuint index,  GLint size,  GLenum type,  GLboolean normalized,  GLsizei stride,  const GLvoid * pointer);
-//	i32_t AddBinding(const char *attrib_name, GLenum comp_type, GLint comp_count, GLint stride, GLint offset, GLboolean normalize = false) {
-//		return AddBinding(p->GetAttribLocation(attrib_name), comp_type, comp_count, stride, offset, normalize);
-//	}
+//    i32_t AddBinding(const char *attrib_name, GLenum comp_type, GLint comp_count, GLint stride, GLint offset, GLboolean normalize = false) {
+//        return AddBinding(p->GetAttribLocation(attrib_name), comp_type, comp_count, stride, offset, normalize);
+//    }
 
     inline i32_t AddBinding(const char *attrib_name, const LBX_REFL_STRUCT_INFO *ti, const char *member_name, GLboolean normalize = false) {
         return AddBinding(p->GetAttribLocation(attrib_name), ti, member_name, normalize);
     }
-//	inline i32_t AddBinding_vec4_f32(const char *attrib_name, GLint stride = sizeof(vec4_f32), GLint offset = 0, GLboolean normalize = false) {
-//		return AddBinding(attrib_name, GL_FLOAT, 4, stride, offset, normalize);
-//	}
-//	inline i32_t AddBinding_vec3_f32(const char *attrib_name, GLint stride = sizeof(vec3_f32), GLint offset = 0, GLboolean normalize = false) {
-//		return AddBinding(attrib_name, GL_FLOAT, 3, stride, offset, normalize);
-//	}
-//	inline i32_t AddBinding_vec2_f32(const char *attrib_name, GLint stride = sizeof(vec2_f32), GLint offset = 0, GLboolean normalize = false) {
-//		return AddBinding(attrib_name, GL_FLOAT, 2, stride, offset, normalize);
-//	}
-//	inline i32_t AddBinding_vec4u32(const char *attrib_name, GLint stride = sizeof(vec4u32), GLint offset = 0, GLboolean normalize = true) {
-//		return AddBinding(attrib_name, GL_UNSIGNED_BYTE, 4, stride, offset, normalize);
-//	}
+//    inline i32_t AddBinding_vec4_f32(const char *attrib_name, GLint stride = sizeof(vec4_f32), GLint offset = 0, GLboolean normalize = false) {
+//        return AddBinding(attrib_name, GL_FLOAT, 4, stride, offset, normalize);
+//    }
+//    inline i32_t AddBinding_vec3_f32(const char *attrib_name, GLint stride = sizeof(vec3_f32), GLint offset = 0, GLboolean normalize = false) {
+//        return AddBinding(attrib_name, GL_FLOAT, 3, stride, offset, normalize);
+//    }
+//    inline i32_t AddBinding_vec2_f32(const char *attrib_name, GLint stride = sizeof(vec2_f32), GLint offset = 0, GLboolean normalize = false) {
+//        return AddBinding(attrib_name, GL_FLOAT, 2, stride, offset, normalize);
+//    }
+//    inline i32_t AddBinding_vec4u32(const char *attrib_name, GLint stride = sizeof(vec4u32), GLint offset = 0, GLboolean normalize = true) {
+//        return AddBinding(attrib_name, GL_UNSIGNED_BYTE, 4, stride, offset, normalize);
+//    }
 
     void Clear(void);
 
@@ -829,7 +829,7 @@ private:
 protected:
     u32_t flags;
     TGLTexture2D *tex;
-//	GLuint tex;
+//    GLuint tex;
     GLuint depth;
     size2_i16 sz;
     i32_t samples;
@@ -842,7 +842,7 @@ public:
     inline GLenum SetSize(size2_i16 size, i32_t multisamples = 1) { return Update(size, multisamples); }
     void Bind(void);
     void Release(void);
-//	inline GLuint GetTexture() {return tex;}
+//    inline GLuint GetTexture() {return tex;}
     i32_t SetTexture(GLuint texture_handle);
 
     virtual GLuint GetHandle(void);
