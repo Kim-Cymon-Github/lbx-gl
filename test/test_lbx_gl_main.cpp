@@ -1,4 +1,7 @@
 ﻿#include <stdio.h>
+#if defined(__BORLANDC__)
+#   pragma hdrstop
+#endif
 #include "gl/lbx_gl_class.h"
 #define IMPLEMENT_SIMPLE_CONSOLE_LOG_HANDLER
 #include "system/lbx_log.h"
@@ -8,8 +11,11 @@
 
 #include "test_lbx_gl_routines.h"
 
-#pragma comment (lib, "lbx-gl.lib")
-#pragma comment (lib, "lbx-core.lib")
+#if defined(_MSC_VER) || defined(__BORLANDC__)
+#   pragma comment (lib, "lbx-core.lib")
+#   pragma comment (lib, "lbx-intf.lib")
+#   pragma comment (lib, "lbx-gl.lib")
+#endif
 
 i32_t main(void)
 {

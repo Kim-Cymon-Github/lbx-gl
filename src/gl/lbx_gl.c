@@ -19,15 +19,15 @@ u32_t lbx_gl_version(void) { return version_(VERSION_MAJOR, VERSION_MINOR, VERSI
 
 
 #ifdef GLES
-    #ifdef IS_WINDOWS
-        #pragma comment (lib, "libEGL")
-        #pragma comment (lib, "libGLESv2")  // 이유는 알 수 없으나 직접 프로젝트에 추가해야 정상 동작함
-    #endif //#ifdef IS_WINDOWS
-    #if GLES == 20
-        #define LBX_RENDERABLE_TYPE EGL_OPENGL_ES2_BIT
-    #elif GLES >= 30 //#if GLES == 20
-        #define LBX_RENDERABLE_TYPE EGL_OPENGL_ES3_BIT
-    #endif //#elif GLES >= 30 #if GLES == 20
+#   ifdef IS_WINDOWS
+#       pragma comment (lib, "libEGL")
+#       pragma comment (lib, "libGLESv2")  // 이유는 알 수 없으나 직접 프로젝트에 추가해야 정상 동작함
+#   endif //#ifdef IS_WINDOWS
+#   if GLES == 20
+#       define LBX_RENDERABLE_TYPE EGL_OPENGL_ES2_BIT
+#   elif GLES >= 30 //#if GLES == 20
+#       define LBX_RENDERABLE_TYPE EGL_OPENGL_ES3_BIT
+#   endif //#elif GLES >= 30 #if GLES == 20
 #endif
 
 #ifdef _WIN32

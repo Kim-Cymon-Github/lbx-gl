@@ -1,4 +1,5 @@
 ﻿//---------------------------------------------------------------------------
+#include <ctype.h>
 
 #if defined(__BORLANDC__)
 #   pragma hdrstop
@@ -87,7 +88,7 @@ size_t stream_read_glprogram(LBX_STREAM *s, GLuint h_prog, GLenum* bin_format)
     #endif //#ifndef GL_GLEXT_PROTOTYPES
     size_t r, payload_size;
     u64_t bf;
-    GLenum err = GL_NO_ERROR;
+    //GLenum err = GL_NO_ERROR;
     r = stream_read_box_header(s, &bf, &payload_size);
     if (r > 0) {
         void * tmp = svec_alloc(payload_size, 1);
@@ -248,7 +249,7 @@ TGLTexture2D::~TGLTexture2D()
 //---------------------------------------------------------------------------
 i32_t TGLTexture2D::SetImage(const LBX_IMAGE *img, i32_t target)
 {
-    fourcc_t pf = img->pixel_format;
+    //fourcc_t pf = img->pixel_format;
     size2_i16 sz = img->planes[0].size;
     GLenum fmt;
 
@@ -316,7 +317,7 @@ u8_t idx_border_triangle_strip[] = {0,4,1,5,2,6,3,7,7,7,6,11,10,15,14,14,14,10,1
 
 /////////////////////////////////////////////////////////////////////////////
 TGlyph::TGlyph(TGLTexture2D *tex)
-    : fit(NULL), border(NULL), tex_coord(NULL), flags(0)
+    : fit(NULL), border(NULL), flags(0), tex_coord(NULL)
 {
     texture = tex;
     memset(&scr_boundary, 0, sizeof(scr_boundary));
@@ -535,7 +536,7 @@ i32_t TGlyph::BuildDrawList(void *buffer, const LBX_GLBUFFER_DESC *bi, i16_t *in
 
 /////////////////////////////////////////////////////////////////////////////
 TGLShader::TGLShader(GLenum type)
-    : flags(0), TGLObject()
+    : TGLObject(), flags(0)
 {
     CreateGLObject(type);
 /*
@@ -759,40 +760,40 @@ TGLFragmentShader::~TGLFragmentShader()
 
 /////////////////////////////////////////////////////////////////////////////
 TGLProgram::TGLProgram()
-    : TGLObject(), attrib_types(NULL), attrib_data(NULL), flags(0)
+    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
 {
     shaders[0] = shaders[1] = NULL;
 
 }
 //---------------------------------------------------------------------------
 TGLProgram::TGLProgram(const char *file_name, GLenum bin_format)
-    : TGLObject(), attrib_types(NULL), attrib_data(NULL), flags(0)
+    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
 {
     shaders[0] = shaders[1] = NULL;
     LoadFromFile(file_name, bin_format);
 }
 //---------------------------------------------------------------------------
 TGLProgram::TGLProgram(TGLVertexShader *v, TGLFragmentShader * f)
-    : TGLObject(), attrib_types(NULL), attrib_data(NULL), flags(0)
+    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
 {
     shaders[0] = v;
     shaders[1] = f;
 }
 //---------------------------------------------------------------------------
 TGLProgram::TGLProgram(const char *vshader, const char *fshader, const char *hdr)
-    : TGLObject(), attrib_types(NULL), attrib_data(NULL), flags(0)
+    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
 {
     Build(vshader, fshader, hdr);
 }
 //---------------------------------------------------------------------------
 TGLProgram::TGLProgram(TGLVertexShader *vshader, const char *fshader, const char *hdr)
-    : TGLObject(), attrib_types(NULL), attrib_data(NULL), flags(0)
+    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
 {
     Build(vshader, fshader, hdr);
 }
 //---------------------------------------------------------------------------
 TGLProgram::TGLProgram(const char *vshader, TGLFragmentShader *fshader, const char *hdr)
-    : TGLObject(), attrib_types(NULL), attrib_data(NULL), flags(0)
+    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
 {
     Build(vshader, fshader, hdr);
 }
@@ -901,7 +902,7 @@ i64_t TGLProgram::LoadFromStream(LBX_STREAM* s)
     if (r > 0) {
         void* buf = alloc_memory(sz);
         stream_read(s, buf, sz);
-        i64_t r = LoadBinary(buf, sz, (GLenum)bf);
+        r = LoadBinary(buf, sz, (GLenum)bf);
         free_memory(buf);
     }
     return r;
@@ -1111,7 +1112,7 @@ u8_t EstimateAttribTypeFromName(const char *param_name, i32_t l)
 
 void TGLProgram::Analyze(void)
 {
-    i32_t missing_count = 0;
+    //i32_t missing_count = 0;
     i32_t attrib_count = GetIntParam(GL_ACTIVE_ATTRIBUTES);
     i32_t max_length = GetIntParam(GL_ACTIVE_ATTRIBUTE_MAX_LENGTH);
     SVEC_SET_LENGTH(u8_t, &attrib_types, attrib_count);
@@ -1305,7 +1306,7 @@ i32_t TGLProgram::Uniform(GLint uniform_loc, const mat4_f32 *data, i32_t count)
 //---------------------------------------------------------------------------
 i32_t TGLProgram::Uniform(GLint uniform_loc, LBX_TYPE type, const void *data, i32_t count)
 {
-    i32_t dim = LBX_TYPE_DIMENSION(type);
+    //i32_t dim = LBX_TYPE_DIMENSION(type);
     bool is_mat = LBX_TYPE_ISMATRIX(type);
     switch (LBX_TYPE_ELEMTYPE(type)) {
         case LBX_TYPE_F32:
@@ -1530,9 +1531,9 @@ TGLAttribBuffer::~TGLAttribBuffer()
 bool TGLAttribBuffer::Register(const char* struct_id)
 {
     i32_t i, len = (i32_t)strlen(struct_id);
-    u8_t attrib_type;
-    LBX_TYPE data_type;
-    i32_t size;
+    u8_t attrib_type = LBX_POSITION;
+    LBX_TYPE data_type = LBX_TYPE_VEC4_F32;
+    i32_t size = 0;
     u16_t offset = 0;
 
     SVEC_FREE(&bd);
@@ -1634,7 +1635,7 @@ i32_t TGLAttribBuffer::BindTo(TGLProgram *program, i32_t elem_size)
             si->component_type, si->normalize, bi[i]->stride,
             bi[i]->data + si->offset);
 */
-        GL_CHECK(glVertexAttribPointer(loc, glt.components, glt.component_type, glt.normalize, elem_size, (void*)d.offset));
+        GL_CHECK(glVertexAttribPointer(loc, glt.components, glt.component_type, glt.normalize, elem_size, (void*)(uintptr_t)d.offset));
         r++;
     }
     return r;
@@ -1912,7 +1913,7 @@ i32_t TGLAttribBinder::Disable(void)
 
 
 TGLCommandList::TGLCommandList()
-    : ab(NULL), list(NULL)
+    : list(NULL), ab(NULL)
 {
 }
 TGLCommandList::~TGLCommandList()
@@ -2222,7 +2223,11 @@ void TGLFrameBufferObject::Release(void)
 GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
 {
     GLint n_fbo;
+#if GLES > 20
     GLenum status = GL_FRAMEBUFFER_UNDEFINED;
+#else
+    GLenum status = GL_FRAMEBUFFER_UNSUPPORTED;
+#endif
     bool size_changed = false, sample_changed = false;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &n_fbo);
 
@@ -2257,13 +2262,17 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
     if (size_changed || sample_changed) {
         // 렌더버퍼(깊이버퍼)를 바인딩하고
         GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, depth));
+#if GLES > 20
         if (samples > 1) {
             // 렌더버퍼(깊이버퍼)의 용량을 재조정 하고
             GL_CHECK(glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, LBX_GL_DEPTH_COMPONENT, sz.width, sz.height));
         } else {
             // 렌더버퍼(깊이버퍼)의 용량을 재조정 하고
+#endif
             GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, LBX_GL_DEPTH_COMPONENT, sz.width, sz.height));
+#if GLES > 20
         }
+#endif
         // 다시 연결해준다.
         GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
 
@@ -2272,7 +2281,9 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
             tex = new TGLTexture2D();
         }
 
+#if GLES > 20
         if (samples == 1) {
+#endif
             // 텍스쳐를 바인딩하고
             tex->Bind();
             // 파라미터 설정
@@ -2281,6 +2292,7 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
             // 텍스쳐 크기 변경
             GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sz.width, sz.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
             GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->GetHandle(), 0)); // 마지막은 mipmap 레벨임
+#if GLES > 20
         } else {
             GL_CHECK(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, tex->GetHandle()));
             // 파라미터 설정
@@ -2292,12 +2304,13 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
             GL_CHECK(glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA8, sz.width, sz.height, GL_TRUE));
             GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, tex->GetHandle(), 0));
         }
+#endif
     }
     // 프레임버퍼 상태 점검
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
     // Framebuffer 바인딩을 원복함
-    if (n_fbo != handle) {
+    if (n_fbo != (GLint)handle) {
         GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, n_fbo));
     }
     return status;

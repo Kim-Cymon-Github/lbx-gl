@@ -5,7 +5,7 @@ STRIP ?= strip
 
 OBJS=\
 	lbx_gl.o \
-	lbx_gles2.o \
+	lbx_gl_class.o \
 
 EXT_OBJS=\
 
@@ -31,7 +31,6 @@ INC= \
 
 DEFS= \
 	-DLINUX \
-	-DGLES=31\
 	-DENABLE_LOG \
 	-D_LARGEFILE64_SOURCE \
 	-D_FILE_OFFSET_BITS=64 \
@@ -53,6 +52,7 @@ ifeq ($(LBX_GPU), POWERVR)
 	DEFS+=-DPOWERVR=1
 endif
 
+DEFS+=-DGLES=32
 
 all: $(TARGET) $(STATIC_TARGET) $(TEST_TARGET)
 
@@ -79,7 +79,7 @@ test: $(TEST_TARGET)
 $(TEST_TARGET): $(TEST_OBJS)
 	mkdir -p $(OUT_PATH)
 	mkdir -p $(TEST_OUT_PATH)
-	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(GLFLAGS) $(LDFLAGS) -l$(NAME) -ldl
+	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(GLFLAGS) $(LDFLAGS) -l$(NAME) -ldl -llbx-intf
 	$(STRIP) $(TEST_TARGET)
 	tar -czvf $(TEST_TARGET).tar.gz $(TEST_TARGET)
 #	rm $(TEST_TARGET)
@@ -93,9 +93,9 @@ test_lbx_gl_main.o: ../../test/test_lbx_gl_main.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 #OBJS
-lbx_gl.o: ../../src/lbx_gl.c 
+lbx_gl.o: ../../src/gl/lbx_gl.c 
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
-lbx_gles2.o: ../../src/lbx_gles2.cpp
+lbx_gl_class.o: ../../src/gl/lbx_gl_class.cpp
 	$(CXX) $(CFLAGS) -fPIC -c $< -o $@
 
 #EXT_OBJS
