@@ -15,12 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\test\lbx_gles_test_main.cpp">
+    <ClCompile Include="..\..\..\test\test_lbx_gl_main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\test\lbx_gles_test_routines.h">
+    <ClInclude Include="..\..\..\test\test_lbx_gl_routines.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

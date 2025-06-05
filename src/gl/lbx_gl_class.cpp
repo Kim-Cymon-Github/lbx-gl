@@ -344,7 +344,7 @@ void TGlyph::ClearBorder(void)
     border = NULL;
 }
 //---------------------------------------------------------------------------
-void TGlyph::SetBoundary(rect_i16 rect)
+void TGlyph::SetSourceRegion(rect_i16 rect)
 {
     size2_i16 res = texture->image_format.planes[0].size;
     scr_boundary = rect;

@@ -71,24 +71,24 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\..\..\lib\lbx\include;..\..\..\src;$(GLES)\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\lib\lbx\include;..\..\..\src;$(GLES_SDK)\include;$(IncludePath)</IncludePath>
     <OutDir>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <LibraryPath>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\;$(GLES_SDK)\lib\Windows_x86_32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>..\..\..\lib\lbx\include;..\..\..\src;$(GLES)\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\lib\lbx\include;..\..\..\src;$(GLES_SDK)\include;$(IncludePath)</IncludePath>
     <OutDir>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <LibraryPath>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\;$(GLES_SDK)\lib\Windows_x86_32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>..\..\..\lib\lbx\include;..\..\..\src;$(GLES)\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\lib\lbx\include;..\..\..\src;$(GLES_SDK)\include;$(IncludePath)</IncludePath>
     <OutDir>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\;$(GLES)\lib\Windows_x86_64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\;$(GLES_SDK)\lib\Windows_x86_64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\..\..\lib\lbx\include;..\..\..\src;$(GLES)\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\lib\lbx\include;..\..\..\src;$(GLES_SDK)\include;$(IncludePath)</IncludePath>
     <OutDir>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\;$(GLES)\lib\Windows_x86_64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\..\..\lib\lbx\lib\vs\$(Platform)\$(Configuration)\;$(GLES_SDK)\lib\Windows_x86_64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
