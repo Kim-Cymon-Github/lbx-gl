@@ -370,15 +370,15 @@ i32_t LBX_IMAGE_BindTextures(const LBX_IMAGE* self)
         // 현재 평면의 텍스처 값이 0이 아니면 텍스처가 존재함
         if (p[i].texture != 0) {
             // 텍스처 값을 가져옴
-            GLint tx = (GLint)p[i].texture;
+            intptr_t tx = p[i].texture;
             // 해당 인덱스의 텍스처 유닛을 활성화 (GL_TEXTURE0 + i)
             GL_CHECK(glActiveTexture(GL_TEXTURE0 + i));
             // 텍스처 값이 양수이면 GL_TEXTURE_2D 대상에 바인딩
             if (tx > 0) {
-                GL_CHECK(glBindTexture(GL_TEXTURE_2D, tx));
+                GL_CHECK(glBindTexture(GL_TEXTURE_2D, (GLuint)tx));
             } else {
                 // 텍스처 값이 음수이면 절대값을 사용하여 GL_TEXTURE_EXTERNAL_OES 대상에 바인딩
-                GL_CHECK(glBindTexture(GL_TEXTURE_EXTERNAL_OES, -tx));
+                GL_CHECK(glBindTexture(GL_TEXTURE_EXTERNAL_OES, (GLuint)(-tx)));
             }
             // 성공적으로 바인딩된 텍스처 개수 증가
             ++ret;

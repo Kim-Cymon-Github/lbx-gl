@@ -328,6 +328,7 @@ public:
     virtual i32_t SetImage(const LBX_IMAGE *img, i32_t target = -1) = 0;
 
     LBX_IMAGE image_format;
+    bool keep_image_data;
     virtual GLuint GetHandle(void);
 };
 
@@ -848,7 +849,6 @@ public:
     virtual GLuint GetHandle(void);
     inline GLuint GetTexHandle(void) {return tex->GetHandle();}
     inline size2_i16 GetSize(void) {return sz;}
-
 };
 
 

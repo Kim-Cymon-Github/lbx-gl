@@ -126,13 +126,14 @@ GLuint TGLObject::GetHandle(void)
 /////////////////////////////////////////////////////////////////////////////
 TLBTexture::TLBTexture()
 /////////////////////////////////////////////////////////////////////////////
-    : inherited()
+    : keep_image_data(false), inherited()
 {
     LBX_IMAGE_Init(&image_format, 0, 0, fourcc_('R','G','B','A'), NULL);
 }
 //---------------------------------------------------------------------------
 TLBTexture::~TLBTexture()
 {
+    LBX_IMAGE_Free(&image_format);
 }
 //---------------------------------------------------------------------------
 i64_t TLBTexture::LoadFromFile(const char *file_name, i32_t target)
@@ -150,9 +151,12 @@ i64_t TLBTexture::LoadFromStream(LBX_STREAM *s, i32_t target)
     i64_t ret = 0;
     if (LBX_IMAGE_LoadFromStream(&image_format, s) > 0) {
         ret = SetImage(&image_format, (i32_t)target);
-        LBX_IMAGE_Free(&image_format);
+        if (keep_image_data) {
+        } else {
+            LBX_IMAGE_Free(&image_format);
+            LBX_IMAGE_DataToOffset(&image_format);
+        }
     }
-    LBX_IMAGE_DataToOffset(&image_format);
     return ret;
 }
 //---------------------------------------------------------------------------
@@ -181,6 +185,7 @@ GLenum get_gl_format(fourcc_t pixel_format)
             break;
         case fourcc_('R','G','B','4'):
         case fourcc_('R','G','B','A'):
+        case fourcc_('A','B','2','4'):
             fmt = GL_RGBA;
             break;
         case fourcc_('Y','8',' ',' '):
@@ -2279,13 +2284,16 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
         // 텍스쳐 객체가 없는 경우엔 새로 생성
         if (tex == NULL) {
             tex = new TGLTexture2D();
+            if (tex == NULL) {
+                return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+            }
+            Info_("Texture Created: %d", tex->GetHandle());
         }
-
+        tex->Bind();
 #if GLES > 20
         if (samples == 1) {
 #endif
             // 텍스쳐를 바인딩하고
-            tex->Bind();
             // 파라미터 설정
             GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
             GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
