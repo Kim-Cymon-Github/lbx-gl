@@ -149,6 +149,7 @@ i64_t TLBTexture::LoadFromFile(const char *file_name, i32_t target)
 i64_t TLBTexture::LoadFromStream(LBX_STREAM *s, i32_t target)
 {
     i64_t ret = 0;
+    LBX_IMAGE_Free(&image_format);
     if (LBX_IMAGE_LoadFromStream(&image_format, s) > 0) {
         ret = SetImage(&image_format, (i32_t)target);
         if (keep_image_data) {
@@ -435,7 +436,7 @@ i32_t TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, i32_t target_strid
     // 좌상, 우하 좌표부터 먼저 계산함
     if (fit) {
         vec2_f32 sc = vec2_f32_(
-                RECT_WIDTH(area) / (RECT_WIDTH(boundary) + RECT_HEIGHT(*fit)),
+                RECT_WIDTH(area) / (RECT_WIDTH(boundary) + RECT_WIDTH(*fit)),
                 RECT_HEIGHT(area) / (RECT_HEIGHT(boundary) + RECT_HEIGHT(*fit))
             );
         *p[0] = vec2_f32_(area.left - fit->left * sc.x, area.top - fit->top * sc.y);
@@ -2095,7 +2096,7 @@ i32_t TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)
     for (i32_t i = 0; i < icnt; i++) {
         idx[i] = base + indice[i];
     }
-    cl.Add(GL_TRIANGLES, idx, icnt);
+        cl.Add(GL_TRIANGLES, idx, icnt);
     modified = true;
     delete [] idx;
     return 1;

@@ -328,7 +328,7 @@ public:
     virtual i32_t SetImage(const LBX_IMAGE *img, i32_t target = -1) = 0;
 
     LBX_IMAGE image_format;
-    bool keep_image_data;
+    bool keep_image_data; ///< keep image data on cpu memory after loading a texture data
     virtual GLuint GetHandle(void);
 };
 
