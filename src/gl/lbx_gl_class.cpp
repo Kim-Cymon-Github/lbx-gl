@@ -429,31 +429,35 @@ i32_t TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, i32_t target_strid
     }
     vec2_f32 *p[16];
     vec2_f32 sc = scale;
-    if (area.right < area.left) { scale.x = -scale.x; }
-    if (area.bottom < area.top) { scale.y = -scale.y; }
+    // 좌상, 우하 좌표부터 먼저 계산함
+    bool swap_axis = (flags & gfSwapAxis);
+    if (area.right < area.left) { sc.x = -sc.x; }
+    if (area.bottom < area.top) { sc.y = -sc.y; }
     i32_t vtx_count = (border) ? 16 : 4;
     for (i32_t i = 0; i < vtx_count; i++) {
         p[i] = (vec2_f32*)((u8_t*)target + target_stride * i);
     }
 
-    // 좌상, 우하 좌표부터 먼저 계산함
     if (fit) {
-        *p[0] = vec2_f32_(area.left - (f32_t)res.width * fit->left * scale.x, area.top - (f32_t)res.height * fit->top * scale.y);
-        *p[vtx_count - 1] = vec2_f32_(area.right - (f32_t)res.width * fit->right * scale.x, area.bottom - (f32_t)res.height * fit->bottom * scale.y);
+        if (swap_axis) {
+            *p[0]             = vec2_f32_(area.left  - (f32_t)res.height * fit->top    * sc.y, area.top    - (f32_t)res.width * fit->left * sc.x);
+            *p[vtx_count - 1] = vec2_f32_(area.right - (f32_t)res.height * fit->bottom * sc.y, area.bottom - (f32_t)res.width * fit->right * sc.x);
+        } else {
+            *p[0]             = vec2_f32_(area.left  - (f32_t)res.width * fit->left  * sc.x, area.top    - (f32_t)res.height * fit->top * sc.y);
+            *p[vtx_count - 1] = vec2_f32_(area.right - (f32_t)res.width * fit->right * sc.x, area.bottom - (f32_t)res.height * fit->bottom * sc.y);
+        }
     } else {
         *p[0] = vec2_f32_(area.left, area.top);
         *p[vtx_count - 1] = vec2_f32_(area.right, area.bottom);
     }
 
     if (border) {
-        *p[ 5] = vec2_f32_(p[ 0]->x + border->left * (f32_t)res.width * scale.x, p[ 0]->y + border->top * (f32_t)res.height * scale.y);
-        *p[10] = vec2_f32_(p[15]->x + border->right * (f32_t)res.width * scale.x, p[15]->y + border->bottom * (f32_t)res.height * scale.y);
-
-        if (flags & gfSwapAxis) {
-            *p[0] = vec2_f32_(p[0]->y, p[0]->x);
-            *p[5] = vec2_f32_(p[5]->y, p[5]->x);
-            *p[10] = vec2_f32_(p[10]->y, p[10]->x);
-            *p[15] = vec2_f32_(p[15]->y, p[15]->x);
+        if (swap_axis) {
+            *p[5]  = vec2_f32_(p[ 0]->x + (f32_t)res.height * border->top    * sc.y, p[ 0]->y + (f32_t)res.width * border->left * sc.x);
+            *p[10] = vec2_f32_(p[15]->x + (f32_t)res.height * border->bottom * sc.y, p[15]->y + (f32_t)res.width * border->right * sc.x);
+        } else {
+            *p[5]  = vec2_f32_(p[ 0]->x + (f32_t)res.width * border->left  * sc.x, p[ 0]->y + (f32_t)res.height * border->top * sc.y);
+            *p[10] = vec2_f32_(p[15]->x + (f32_t)res.width * border->right * sc.x, p[15]->y + (f32_t)res.height * border->bottom * sc.y);
         }
 
         *p[ 1] = vec2_f32_(p[ 5]->x, p[0]->y);
@@ -2077,10 +2081,38 @@ void TGLDrawList::FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, u32_t colo
 {
     i32_t cnt = glyph->FillVertexList(&(dst->vtx), area, sizeof(V2CT));
     // TexCoord와 Color를 채우고
+    const vec2_f32* t = glyph->GetTexCoords();
     for (i32_t i = 0; i < cnt; i++) {
-        dst[i].txc = glyph->GetTexCoords()[i];
+        dst[i].txc = t[i];
         dst[i].col = color;
     }
+#if 1
+    if (glyph->GetSwapAxis()) {
+        if (cnt == 4) {
+            dst[0].txc = t[1];
+            dst[1].txc = t[3];
+            dst[2].txc = t[0];
+            dst[3].txc = t[2];
+        } else /*if (cnt == 16)*/ {
+            dst[ 0].txc = t[3];
+            dst[ 1].txc = t[7];
+            dst[ 2].txc = t[11];
+            dst[ 3].txc = t[15];
+            dst[ 4].txc = t[2];
+            dst[ 5].txc = t[6];
+            dst[ 6].txc = t[10];
+            dst[ 7].txc = t[14];
+            dst[ 8].txc = t[1];
+            dst[ 9].txc = t[5];
+            dst[10].txc = t[9];
+            dst[11].txc = t[13];
+            dst[12].txc = t[0];
+            dst[13].txc = t[4];
+            dst[14].txc = t[8];
+            dst[16].txc = t[11];
+        }
+    }
+#endif
 /*
     u16_t *idx = new u16_t[icnt];
     for (i32_t i = 0; i < icnt; i++) {
@@ -2099,9 +2131,35 @@ i32_t TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)
     // Vertex정보를 채우고
     cnt = glyph->FillVertexList(&(v->vtx), area, sizeof(V2CT));
     // TexCoord와 Color를 채우고
+    const vec2_f32* t = glyph->GetTexCoords();
     for (i32_t i = 0; i < cnt; i++) {
-        v[i].txc = glyph->GetTexCoords()[i];
+        v[i].txc = t[i];
         v[i].col = color;
+    }
+    if (glyph->GetSwapAxis()) {
+        if (cnt == 4) {
+            v[0].txc = t[1];
+            v[1].txc = t[3];
+            v[2].txc = t[0];
+            v[3].txc = t[2];
+        } else /*if (cnt == 16)*/ {
+            v[0].txc = t[3];
+            v[1].txc = t[7];
+            v[2].txc = t[11];
+            v[3].txc = t[15];
+            v[4].txc = t[2];
+            v[5].txc = t[6];
+            v[6].txc = t[10];
+            v[7].txc = t[14];
+            v[8].txc = t[1];
+            v[9].txc = t[5];
+            v[10].txc = t[9];
+            v[11].txc = t[13];
+            v[12].txc = t[0];
+            v[13].txc = t[4];
+            v[14].txc = t[8];
+            v[16].txc = t[11];
+        }
     }
     u16_t *idx = new u16_t[icnt];
     for (i32_t i = 0; i < icnt; i++) {
