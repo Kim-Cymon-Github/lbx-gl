@@ -395,7 +395,8 @@ protected:
     enum TGlyphFlags {
         gfHasHole = 0x01u,
         gfHasAlign = 0x02u,
-        gfHasBorder = 0x04u
+        gfHasBorder = 0x04u,
+        gfSwapAxis = 0x08u
     };
     vec2_f32 *tex_coord;
 public:
@@ -427,6 +428,9 @@ public:
 
     inline vec2_f32 GetScale(void) {return scale;}
     inline void SetScale(vec2_f32 value) {scale = value;}
+
+    inline bool GetSwapAxis(void) { return get_flag32(flags, gfSwapAxis); }
+    inline void SetSwapAxis(bool value) { set_flag32(&flags, gfSwapAxis, value); }
 
     inline void Bind(void) {texture->Bind();}
 

@@ -428,6 +428,9 @@ i32_t TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, i32_t target_strid
         target_stride = sizeof(*target);
     }
     vec2_f32 *p[16];
+    vec2_f32 sc = scale;
+    if (area.right < area.left) { scale.x = -scale.x; }
+    if (area.bottom < area.top) { scale.y = -scale.y; }
     i32_t vtx_count = (border) ? 16 : 4;
     for (i32_t i = 0; i < vtx_count; i++) {
         p[i] = (vec2_f32*)((u8_t*)target + target_stride * i);
@@ -435,21 +438,23 @@ i32_t TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, i32_t target_strid
 
     // 좌상, 우하 좌표부터 먼저 계산함
     if (fit) {
-        vec2_f32 sc = vec2_f32_(
-                RECT_WIDTH(area) / (RECT_WIDTH(boundary) + RECT_WIDTH(*fit)),
-                RECT_HEIGHT(area) / (RECT_HEIGHT(boundary) + RECT_HEIGHT(*fit))
-            );
-        *p[0] = vec2_f32_(area.left - fit->left * sc.x, area.top - fit->top * sc.y);
-        *p[vtx_count - 1] = vec2_f32_(area.right - fit->right * sc.x, area.bottom - fit->bottom * sc.y);
+        *p[0] = vec2_f32_(area.left - (f32_t)res.width * fit->left * scale.x, area.top - (f32_t)res.height * fit->top * scale.y);
+        *p[vtx_count - 1] = vec2_f32_(area.right - (f32_t)res.width * fit->right * scale.x, area.bottom - (f32_t)res.height * fit->bottom * scale.y);
     } else {
         *p[0] = vec2_f32_(area.left, area.top);
         *p[vtx_count - 1] = vec2_f32_(area.right, area.bottom);
     }
 
-
     if (border) {
         *p[ 5] = vec2_f32_(p[ 0]->x + border->left * (f32_t)res.width * scale.x, p[ 0]->y + border->top * (f32_t)res.height * scale.y);
         *p[10] = vec2_f32_(p[15]->x + border->right * (f32_t)res.width * scale.x, p[15]->y + border->bottom * (f32_t)res.height * scale.y);
+
+        if (flags & gfSwapAxis) {
+            *p[0] = vec2_f32_(p[0]->y, p[0]->x);
+            *p[5] = vec2_f32_(p[5]->y, p[5]->x);
+            *p[10] = vec2_f32_(p[10]->y, p[10]->x);
+            *p[15] = vec2_f32_(p[15]->y, p[15]->x);
+        }
 
         *p[ 1] = vec2_f32_(p[ 5]->x, p[0]->y);
         *p[ 2] = vec2_f32_(p[10]->x, p[0]->y);
@@ -471,6 +476,12 @@ i32_t TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, i32_t target_strid
     } else {
         *p[1] = vec2_f32_(p[3]->x, p[0]->y);
         *p[2] = vec2_f32_(p[0]->x, p[3]->y);
+        if (flags & gfSwapAxis) {
+            *p[0] = vec2_f32_(p[0]->y, p[0]->x);
+            *p[1] = vec2_f32_(p[1]->y, p[1]->x);
+            *p[2] = vec2_f32_(p[2]->y, p[2]->x);
+            *p[3] = vec2_f32_(p[3]->y, p[3]->x);
+        }
     }
     return 4;
 }
@@ -2096,7 +2107,7 @@ i32_t TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)
     for (i32_t i = 0; i < icnt; i++) {
         idx[i] = base + indice[i];
     }
-        cl.Add(GL_TRIANGLES, idx, icnt);
+    cl.Add(GL_TRIANGLES, idx, icnt);
     modified = true;
     delete [] idx;
     return 1;
