@@ -2136,7 +2136,7 @@ i32_t TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)
         v[i].txc = t[i];
         v[i].col = color;
     }
-#if 1
+#if 0
     if (glyph->GetSwapAxis()) {
         if (cnt == 4) {
             v[0].txc = t[1];
@@ -2160,6 +2160,32 @@ i32_t TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)
             v[13].txc = t[4];
             v[14].txc = t[8];
             v[15].txc = t[12];
+        }
+    }
+#else
+    if (glyph->GetSwapAxis()) {
+        if (cnt == 4) {
+            v[0].txc = t[1];
+            v[1].txc = t[3];
+            v[2].txc = t[0];
+            v[3].txc = t[2];
+        } else if (cnt == 16) {
+            v[0].txc = t[0];
+            v[1].txc = t[4];
+            v[2].txc = t[8];
+            v[3].txc = t[12];
+            v[4].txc = t[1];
+            v[5].txc = t[5];
+            v[6].txc = t[9];
+            v[7].txc = t[13];
+            v[8].txc = t[2];
+            v[9].txc = t[6];
+            v[10].txc = t[10];
+            v[11].txc = t[14];
+            v[12].txc = t[3];
+            v[13].txc = t[7];
+            v[14].txc = t[11];
+            v[15].txc = t[15];
         }
     }
 #endif
