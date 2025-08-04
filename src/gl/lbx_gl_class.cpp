@@ -2086,14 +2086,14 @@ void TGLDrawList::FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, u32_t colo
         dst[i].txc = t[i];
         dst[i].col = color;
     }
-#if 1
+#if 0 // 안쓰이는거 같음
     if (glyph->GetSwapAxis()) {
         if (cnt == 4) {
             dst[0].txc = t[1];
             dst[1].txc = t[3];
             dst[2].txc = t[0];
             dst[3].txc = t[2];
-        } else /*if (cnt == 16)*/ {
+        } else if (cnt == 16) {
             dst[ 0].txc = t[3];
             dst[ 1].txc = t[7];
             dst[ 2].txc = t[11];
@@ -2109,7 +2109,7 @@ void TGLDrawList::FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, u32_t colo
             dst[12].txc = t[0];
             dst[13].txc = t[4];
             dst[14].txc = t[8];
-            dst[16].txc = t[11];
+            dst[15].txc = t[12];
         }
     }
 #endif
@@ -2136,13 +2136,14 @@ i32_t TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)
         v[i].txc = t[i];
         v[i].col = color;
     }
+#if 1
     if (glyph->GetSwapAxis()) {
         if (cnt == 4) {
             v[0].txc = t[1];
             v[1].txc = t[3];
             v[2].txc = t[0];
             v[3].txc = t[2];
-        } else /*if (cnt == 16)*/ {
+        } else if (cnt == 16) {
             v[0].txc = t[3];
             v[1].txc = t[7];
             v[2].txc = t[11];
@@ -2158,9 +2159,10 @@ i32_t TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)
             v[12].txc = t[0];
             v[13].txc = t[4];
             v[14].txc = t[8];
-            v[16].txc = t[11];
+            v[15].txc = t[12];
         }
     }
+#endif
     u16_t *idx = new u16_t[icnt];
     for (i32_t i = 0; i < icnt; i++) {
         idx[i] = base + indice[i];
