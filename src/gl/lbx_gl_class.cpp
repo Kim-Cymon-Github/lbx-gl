@@ -107,7 +107,7 @@ size_t stream_read_glprogram(LBX_STREAM *s, GLuint h_prog, GLenum* bin_format)
 
 /////////////////////////////////////////////////////////////////////////////
 TGLObject::TGLObject()
-    : handle(0)
+    : handle(0), flags(0)
 {
 
 }
@@ -121,12 +121,17 @@ GLuint TGLObject::GetHandle(void)
 {
     return handle;
 }
+//---------------------------------------------------------------------------
+void TGLObject::SetHandle(GLuint h)
+{
+    handle = h;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
 TLBTexture::TLBTexture()
 /////////////////////////////////////////////////////////////////////////////
-    : keep_image_data(false), inherited()
+    : inherited()
 {
     LBX_IMAGE_Init(&image_format, 0, 0, fourcc_('R','G','B','A'), NULL);
 }
@@ -136,23 +141,23 @@ TLBTexture::~TLBTexture()
     LBX_IMAGE_Free(&image_format);
 }
 //---------------------------------------------------------------------------
-i64_t TLBTexture::LoadFromFile(const char *file_name, i32_t target)
+i64_t TLBTexture::LoadFromFile(const char *file_name, i32_t target, LBX_IMAGE_USER_DATA_CALLBACK user_data_handler, void* user_context)
 {
     i64_t ret = 0;
     LBX_STREAM st = {0,};
     stream_open_file(&st, file_name, "rb");
-    ret = LoadFromStream(&st, target);
+    ret = LoadFromStream(&st, target, user_data_handler, user_context);
     stream_close(&st);
     return ret;
 }
 //---------------------------------------------------------------------------
-i64_t TLBTexture::LoadFromStream(LBX_STREAM *s, i32_t target)
+i64_t TLBTexture::LoadFromStream(LBX_STREAM* s, i32_t target, LBX_IMAGE_USER_DATA_CALLBACK user_data_handler, void* user_context)
 {
     i64_t ret = 0;
     LBX_IMAGE_Free(&image_format);
-    if (LBX_IMAGE_LoadFromStream(&image_format, s) > 0) {
+    if (LBX_IMAGE_LoadFromStream(&image_format, s, user_data_handler, user_context) > 0) {
         ret = SetImage(&image_format, (i32_t)target);
-        if (keep_image_data) {
+        if (KeepImageData()) {
         } else {
             LBX_IMAGE_Free(&image_format);
             LBX_IMAGE_DataToOffset(&image_format);
@@ -296,6 +301,11 @@ i32_t TGLTexture2D::SetImage(const LBX_IMAGE *img, i32_t target)
 
 }
 
+// 화면좌표계를 쓰는데 위아래를 뒤집지 않는 이유
+// BMP의 경우 반대지만, 통상적인 이미지 데이터는 최상단은 이미지의 맨 앞쪽이다.
+// 따라서 OpenGL에서 Texture데이터를 로딩하면 원점이 바로 이 최상단이 되는거고, +Y 방향은
+// 이미지의 하단을 향하게 되어 그냥 렌더링하면 상하가 뒤집혀서 표시된다.
+// 즉, 완벽하게 GDI에서의 이미지 좌표계와 일치하게 된다.
 
 static inline void xywh_to_rect(rect_f32 *dst, i32_t x, i32_t y, i32_t width, i32_t height, size2_i16 res)
 {
@@ -328,7 +338,7 @@ TGlyph::TGlyph(TGLTexture2D *tex)
     texture = tex;
     memset(&scr_boundary, 0, sizeof(scr_boundary));
     memset(&boundary, 0, sizeof(boundary));
-    scale = vec2_f32_(1.0, 1.0);
+    scale = vec2_f32_(1.0f, 1.0f);
 }
 //---------------------------------------------------------------------------
 TGlyph::~TGlyph()
@@ -352,9 +362,8 @@ void TGlyph::ClearBorder(void)
 //---------------------------------------------------------------------------
 void TGlyph::SetSourceRegion(rect_i16 rect)
 {
-    size2_i16 res = texture->image_format.planes[0].size;
     scr_boundary = rect;
-    rect_normalize(&boundary, rect, res);
+    rect_normalize(&boundary, rect, texture->image_format.planes[0].size);
 }
 //---------------------------------------------------------------------------
 void TGlyph::FitTo(rect_i16 rect)
@@ -384,11 +393,13 @@ void TGlyph::Update(void)
 {
     if (border) {
         SVEC_SET_LENGTH(vec2_f32, &tex_coord, 16);
+        // LT부터 RB로 대각방향의 포인트 계산
         tex_coord[ 0] = vec2_f32_(boundary.left, boundary.top);
         tex_coord[15] = vec2_f32_(boundary.right, boundary.bottom);
-        tex_coord[ 5] = vec2_f32_(tex_coord[ 0].x + border->left, tex_coord[ 0].y + border->top);
-        tex_coord[10] = vec2_f32_(tex_coord[15].x + border->right, tex_coord[15].y + border->bottom);
+        tex_coord[ 5] = vec2_f32_(tex_coord[ 0].x + border->left, tex_coord[ 0].y + border->top);      
+        tex_coord[10] = vec2_f32_(tex_coord[15].x + border->right, tex_coord[15].y + border->bottom);  
 
+        // 나머지는 위 4개 포인트의 x, y를 배분해서 가져간다
         tex_coord[ 1] = vec2_f32_(tex_coord[ 5].x, tex_coord[ 0].y);
         tex_coord[ 2] = vec2_f32_(tex_coord[10].x, tex_coord[ 0].y);
         tex_coord[ 3] = vec2_f32_(tex_coord[15].x, tex_coord[ 0].y);
@@ -418,55 +429,85 @@ i32_t TGlyph::GetVertexCount(void)
     return (border ? 16 : 4);
 }
 //---------------------------------------------------------------------------
-#define PTR_OFFSET(ptr, offset) ((u8_t*)ptr + offset)
-i32_t TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, i32_t target_stride)
+// left, top, right, bottom은 이미지 좌표상에서 정의되는 것이므로 통상 right > left, bottom > top이다.
+// 이와 같은 이유로 Glyph편집툴에서도 처음 그리드를 생성하면 Y축이 아래를 향하게 표시되는 이유이기도 하다.
+// Glyph편집툴에서 축의 방향을 바꾸게 되면 이 크기관계는 뒤집히기도 하며, 이 경우 위아래 혹은 좌우로
+// 뒤집힌 Glyph 경계 데이터가 생기게 된다.
+// Glyph를 물리좌표로 옮기는 작업은 기본적으로 이 경계 데이터를 기초로 한다.
+// 통상적인 경우 
+// 
+// left -> right: +X
+// top -> bottom: +Y
+// swap axis인 경우
+// left -> right: +Y
+// top -> bottom: +X
+static inline void swap_f32(f32_t* a, f32_t* b) { f32_t tmp = *a; *a = *b; *b = tmp; }
+
+i32_t TGlyph::FillVertexList(vec2_f32* target, vec2_f32 p0, vec2_f32 p1, i32_t target_stride)
 {
     size2_i16 res = texture->image_format.planes[0].size;
+    vec2_f32* p[16];
+    vec2_f32 sc = scale; 
 
+    assert(p0.x != p1.x && p0.y != p1.y);
     Update();
     if (target_stride == 0) {
         target_stride = sizeof(*target);
     }
-    vec2_f32 *p[16];
-    vec2_f32 sc = scale;
-    // 좌상, 우하 좌표부터 먼저 계산함
+
+    // scale값이 잘 못 지정된 경우 이를 바로잡음
+    if (boundary.left > boundary.right && sc.x > 0.0f) { sc.x = -sc.x; }
+    if (boundary.top > boundary.bottom && sc.y > 0.0f) { sc.y = -sc.y; }
+
+#if 1
+    // p0, p1 입력 순서에 따라 한 번 더 뒤집는 방식
+    if (p0.x > p1.x) { sc.x = -sc.x; }
+    if (p0.y > p1.y) { sc.y = -sc.y; }
+#else
+    // p0, p1을 입력 순서와 무관하게 보정하는 방식
+    if (p0.x > p1.x) { swap_f32(&p0.x, &p1.x); }
+    if (p0.y > p1.y) { swap_f32(&p0.y, &p1.y); }
+#endif
+
+
     bool swap_axis = (flags & gfSwapAxis);
-    if (area.right < area.left) { sc.x = -sc.x; }
-    if (area.bottom < area.top) { sc.y = -sc.y; }
+
     i32_t vtx_count = (border) ? 16 : 4;
+    i32_t li = vtx_count - 1; // last index
     for (i32_t i = 0; i < vtx_count; i++) {
         p[i] = (vec2_f32*)((u8_t*)target + target_stride * i);
     }
 
+    // 물리좌표는 정점 좌표이므로 기본적으로 스왑되지 않지만 fit이 있어 보정이 필요한 경우 보정하는 양은 swap_axis에 영향을 받게 된다.
     if (fit) {
         if (swap_axis) {
-            *p[0]             = vec2_f32_(area.left  - (f32_t)res.height * fit->top    * sc.y, area.top    - (f32_t)res.width * fit->left * sc.x);
-            *p[vtx_count - 1] = vec2_f32_(area.right - (f32_t)res.height * fit->bottom * sc.y, area.bottom - (f32_t)res.width * fit->right * sc.x);
+            *p[ 0] = vec2_f32_(p0.x - fit->top    * (f32_t)res.height * sc.y, p0.y - fit->left   * (f32_t)res.width  * sc.x);
+            *p[li] = vec2_f32_(p1.x - fit->bottom * (f32_t)res.height * sc.y, p1.y - fit->right  * (f32_t)res.width  * sc.x);
         } else {
-            *p[0]             = vec2_f32_(area.left  - (f32_t)res.width * fit->left  * sc.x, area.top    - (f32_t)res.height * fit->top * sc.y);
-            *p[vtx_count - 1] = vec2_f32_(area.right - (f32_t)res.width * fit->right * sc.x, area.bottom - (f32_t)res.height * fit->bottom * sc.y);
+            *p[ 0] = vec2_f32_(p0.x - fit->left   * (f32_t)res.width  * sc.x, p0.y - fit->top    * (f32_t)res.height * sc.y);
+            *p[li] = vec2_f32_(p1.x - fit->right  * (f32_t)res.width  * sc.x, p1.y - fit->bottom * (f32_t)res.height * sc.y);
         }
     } else {
-        *p[0] = vec2_f32_(area.left, area.top);
-        *p[vtx_count - 1] = vec2_f32_(area.right, area.bottom);
+        *p[ 0] = vec2_f32_(p0.x, p0.y);
+        *p[li] = vec2_f32_(p1.x, p1.y);
     }
 
     if (border) {
         if (swap_axis) {
-            *p[5]  = vec2_f32_(p[ 0]->x + (f32_t)res.height * border->top    * sc.y, p[ 0]->y + (f32_t)res.width * border->left * sc.x);
-            *p[10] = vec2_f32_(p[15]->x + (f32_t)res.height * border->bottom * sc.y, p[15]->y + (f32_t)res.width * border->right * sc.x);
+            *p[ 5] = vec2_f32_(p[ 0]->x + border->top    * (f32_t)res.height * sc.y, p[ 0]->y + border->left   * (f32_t)res.width  * sc.x);
+            *p[10] = vec2_f32_(p[15]->x + border->bottom * (f32_t)res.height * sc.y, p[15]->y + border->right  * (f32_t)res.width  * sc.x);
         } else {
-            *p[5]  = vec2_f32_(p[ 0]->x + (f32_t)res.width * border->left  * sc.x, p[ 0]->y + (f32_t)res.height * border->top * sc.y);
-            *p[10] = vec2_f32_(p[15]->x + (f32_t)res.width * border->right * sc.x, p[15]->y + (f32_t)res.height * border->bottom * sc.y);
+            *p[ 5] = vec2_f32_(p[ 0]->x + border->left   * (f32_t)res.width  * sc.x, p[ 0]->y + border->top    * (f32_t)res.height * sc.y);
+            *p[10] = vec2_f32_(p[15]->x + border->right  * (f32_t)res.width  * sc.x, p[15]->y + border->bottom * (f32_t)res.height * sc.y);
         }
 
-        *p[ 1] = vec2_f32_(p[ 5]->x, p[0]->y);
-        *p[ 2] = vec2_f32_(p[10]->x, p[0]->y);
-        *p[ 3] = vec2_f32_(p[15]->x, p[0]->y);
+        *p[ 1] = vec2_f32_(p[ 5]->x, p[ 0]->y);
+        *p[ 2] = vec2_f32_(p[10]->x, p[ 0]->y);
+        *p[ 3] = vec2_f32_(p[15]->x, p[ 0]->y);
 
-        *p[ 4] = vec2_f32_(p[ 0]->x, p[5]->y);
-        *p[ 6] = vec2_f32_(p[10]->x, p[5]->y);
-        *p[ 7] = vec2_f32_(p[15]->x, p[5]->y);
+        *p[ 4] = vec2_f32_(p[ 0]->x, p[ 5]->y);
+        *p[ 6] = vec2_f32_(p[10]->x, p[ 5]->y);
+        *p[ 7] = vec2_f32_(p[15]->x, p[ 5]->y);
 
         *p[ 8] = vec2_f32_(p[ 0]->x, p[10]->y);
         *p[ 9] = vec2_f32_(p[ 5]->x, p[10]->y);
@@ -478,14 +519,8 @@ i32_t TGlyph::FillVertexList(vec2_f32 *target, rect_f32 area, i32_t target_strid
 
         return 16;
     } else {
-        *p[1] = vec2_f32_(p[3]->x, p[0]->y);
-        *p[2] = vec2_f32_(p[0]->x, p[3]->y);
-        if (flags & gfSwapAxis) {
-            *p[0] = vec2_f32_(p[0]->y, p[0]->x);
-            *p[1] = vec2_f32_(p[1]->y, p[1]->x);
-            *p[2] = vec2_f32_(p[2]->y, p[2]->x);
-            *p[3] = vec2_f32_(p[3]->y, p[3]->x);
-        }
+        *p[ 1] = vec2_f32_(p[ 3]->x, p[ 0]->y);
+        *p[ 2] = vec2_f32_(p[ 0]->x, p[ 3]->y);
     }
     return 4;
 }
@@ -557,7 +592,7 @@ i32_t TGlyph::BuildDrawList(void *buffer, const LBX_GLBUFFER_DESC *bi, i16_t *in
 
 /////////////////////////////////////////////////////////////////////////////
 TGLShader::TGLShader(GLenum type)
-    : TGLObject(), flags(0)
+    : TGLObject()
 {
     CreateGLObject(type);
 /*
@@ -781,54 +816,57 @@ TGLFragmentShader::~TGLFragmentShader()
 
 /////////////////////////////////////////////////////////////////////////////
 TGLProgram::TGLProgram()
-    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
+    : TGLObject(), attrib_types(NULL), attrib_data(NULL)
 {
     shaders[0] = shaders[1] = NULL;
 
 }
 //---------------------------------------------------------------------------
+TGLProgram::TGLProgram(uintptr_t gfx_native_handle)
+    : TGLObject(), attrib_types(NULL), attrib_data(NULL)
+{
+    shaders[0] = shaders[1] = NULL;
+    SetHandle(gfx_native_handle);
+}
+//---------------------------------------------------------------------------
 TGLProgram::TGLProgram(const char *file_name, GLenum bin_format)
-    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
+    : TGLObject(), attrib_types(NULL), attrib_data(NULL)
 {
     shaders[0] = shaders[1] = NULL;
     LoadFromFile(file_name, bin_format);
 }
 //---------------------------------------------------------------------------
 TGLProgram::TGLProgram(TGLVertexShader *v, TGLFragmentShader * f)
-    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
+    : TGLObject(), attrib_types(NULL), attrib_data(NULL)
 {
     shaders[0] = v;
     shaders[1] = f;
 }
 //---------------------------------------------------------------------------
 TGLProgram::TGLProgram(const char *vshader, const char *fshader, const char *hdr)
-    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
+    : TGLObject(), attrib_types(NULL), attrib_data(NULL)
 {
     Build(vshader, fshader, hdr);
 }
 //---------------------------------------------------------------------------
 TGLProgram::TGLProgram(TGLVertexShader *vshader, const char *fshader, const char *hdr)
-    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
+    : TGLObject(), attrib_types(NULL), attrib_data(NULL)
 {
     Build(vshader, fshader, hdr);
 }
 //---------------------------------------------------------------------------
 TGLProgram::TGLProgram(const char *vshader, TGLFragmentShader *fshader, const char *hdr)
-    : TGLObject(), flags(0), attrib_types(NULL), attrib_data(NULL)
+    : TGLObject(), attrib_types(NULL), attrib_data(NULL)
 {
     Build(vshader, fshader, hdr);
 }
 //---------------------------------------------------------------------------
 TGLProgram::~TGLProgram()
 {
-    if (handle) {
-        // glDetachShader가 자동으로 호출되는지 확인할 것
-        for (i32_t i = 0; i < 2; i++) {
-            if (shaders[i]) {
-                GL_CHECK(glDetachShader(handle, shaders[i]->GetHandle()));
-            }
-            SetShader(i, NULL);
-        }
+    for (i32_t i = 0; i < 2; i++) {
+        SetShader(i, NULL);
+    }
+    if (handle > 0) {
         GL_CHECK(glDeleteProgram(handle));
     }
     SVEC_FREE(&attrib_types);
@@ -846,9 +884,25 @@ GLuint TGLProgram::GetHandle(void)
     return handle;
 }
 //---------------------------------------------------------------------------
+void TGLProgram::SetHandle(GLuint gfx_native_handle)
+{
+    flags &= ~(u32_t)pfLinked;
+    inherited::SetHandle((GLuint)gfx_native_handle);
+    if (gfx_native_handle != 0) {
+        Use();
+        if (GetLinkStatus()) {
+            Info_("GetLinkStatus() success");
+            flags |= (u32_t)pfLinked;
+            Analyze();
+        } else {
+            Err_("GetLinkStatus() failed");
+        }
+    }
+}
+//---------------------------------------------------------------------------
 void TGLProgram::SetShader(i32_t index, TGLShader *shader)
 {
-    u32_t f = ((u32_t)(pfOwnsVertexShader) << index);
+    u32_t f = ((u32_t)(pfOwnsVertexShader) << (u32_t)index);
     if (flags & f) {
         delete shaders[index];
         flags &= ~f;
@@ -902,17 +956,25 @@ i32_t TGLProgram::GetIntParam(GLenum pname)
 i64_t TGLProgram::LoadFromFile(const char* file_name)
 {
     LBX_STREAM* s = new_file_stream(file_name, "rb");
-    i64_t r = LoadFromStream(s);
-    delete_stream(s);
-    return r;
+    if (s) {
+        i64_t r = LoadFromStream(s);
+        delete_stream(s);
+        return r;
+    } else {
+        return 0;
+    }
 }
 //---------------------------------------------------------------------------
 i64_t TGLProgram::LoadFromFile(const char *file_name, GLenum bin_format)
 {
     LBX_STREAM *s = new_file_stream(file_name, "rb");
-    i64_t r = LoadFromStream(s, static_cast<i32_t>(stream_get_size(s)), bin_format);
-    delete_stream(s);
-    return r;
+    if (s) {
+        i64_t r = LoadFromStream(s, static_cast<i32_t>(stream_get_size(s)), bin_format);
+        delete_stream(s);
+        return r;
+    } else {
+        return 0;
+    }
 }
 //---------------------------------------------------------------------------
 i64_t TGLProgram::LoadFromStream(LBX_STREAM* s)
@@ -1009,7 +1071,7 @@ TGLShader * TGLProgram::CreateShader(GLenum type, const char *src, const char *h
         SetShader(i, NULL);
         if (ns->IsCompiled()) {
             shaders[i] = ns;
-            flags |= ((u32_t)pfOwnsVertexShader << i);
+            flags |= ((u32_t)pfOwnsVertexShader << i); // i == 1이면 pfOwnsFragmentShader가 됨
         } else {
             delete ns;
             ns = NULL;
@@ -2121,7 +2183,7 @@ void TGLDrawList::FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, u32_t colo
 */    modified = true;
 }
 //---------------------------------------------------------------------------
-i32_t TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)
+i32_t TGLDrawList::AddGlyph(TGlyph* glyph, vec2_f32 p0, vec2_f32 p1, u32_t color)
 {
     i32_t cnt, icnt, base;
     const u8_t *indice = glyph->GetDrawIndice(&icnt);
@@ -2129,7 +2191,7 @@ i32_t TGLDrawList::AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color)
     cnt = glyph->GetVertexCount();
     V2CT *v = (V2CT*)bf.AppendLocalData(cnt, sizeof(V2CT)); // 버퍼 크기를 늘리고
     // Vertex정보를 채우고
-    cnt = glyph->FillVertexList(&(v->vtx), area, sizeof(V2CT));
+    cnt = glyph->FillVertexList(&(v->vtx), p0, p1, sizeof(V2CT));
     // TexCoord와 Color를 채우고
     const vec2_f32* t = glyph->GetTexCoords();
     for (i32_t i = 0; i < cnt; i++) {
@@ -2239,12 +2301,12 @@ i32_t TGLDrawList::Draw(void)
 
 
 TGLFrameBufferObject::TGLFrameBufferObject()
-    : inherited(), flags(0), tex(NULL), depth(0), samples(1)
+    : inherited(), tex(NULL), depth(0), samples(1)
 {
     sz = size2_i16_(0,0);
 }
 TGLFrameBufferObject::TGLFrameBufferObject(i32_t width, i32_t height)
-    : inherited(), flags(0), tex(NULL), depth(0)
+    : inherited(), tex(NULL), depth(0)
 {
     sz = size2_i16_(width, height);
 //    SetSize(width, height);

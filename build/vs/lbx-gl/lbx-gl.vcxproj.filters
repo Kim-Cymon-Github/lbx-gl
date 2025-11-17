@@ -18,7 +18,7 @@
     <ClInclude Include="..\..\..\src\gl\lbx_gl_class.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\gl\src\lbx_gl.h">
+    <ClInclude Include="..\..\..\src\gl\lbx_gl.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\version.h">

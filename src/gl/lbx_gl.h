@@ -6,51 +6,34 @@
 
 #include "image/lbx_image.h"
 
-#define GLES_3_2
-
-#ifndef GLES
-#   if defined(GLES_1_0)
-#       define GLES 10
-#   elif defined(GLES_1_1)
-#       define GLES 11
-#   elif defined(GLES_2_0)
-#       define GLES 20
-#   elif defined(GLES_3_0)
-#       define GLES 30
-#   elif defined(GLES_3_1)
-#       define GLES 31
-#   elif defined(GLES_3_2)
-#       define GLES 32
-#   endif
-#endif //#ifndef GLES
-
-
-#ifdef GLES
+#ifdef LBX_GLES_VERSION
 #   include <EGL/egl.h>
 #   include <EGL/eglext.h>
-#   if GLES < 20 // GLES 1.x
+#   if LBX_GLES_VERSION < 20 // GLES 1.x
 #       include <GLES/gl.h>
-#   elif GLES < 30 // GLES 2.x
+#   elif LBX_GLES_VERSION < 30 // GLES 2.x
 #       include <GLES2/gl2.h>
-#   else //#elif GLES < 30 // GLES 3.x
+#   else //#elif LBX_GLES_VERSION < 30 // GLES 3.x
 #       include <GLES3/gl3.h>
-#       if GLES >= 32 // GLES 3.2
+#       if LBX_GLES_VERSION >= 32 // GLES 3.2
 #           include <GLES3/gl32.h>
-#       elif GLES >= 31 //#if GLES >= 32
+#       elif LBX_GLES_VERSION >= 31 //#if LBX_GLES_VERSION >= 32
 #           include <GLES3/gl31.h> // GLES 3.1
 #       endif
-#   endif //#else #elif GLES < 30
-#   if GLES >= 20
+#   endif //#else #elif LBX_GLES_VERSION < 30
+#   if LBX_GLES_VERSION >= 20
 #        include <GLES2/gl2ext.h>
 #   endif
-#endif //#ifdef GLES
+#else
+#   include <gl/gl.h>  // 일반 OpenGL
+#endif //#ifdef LBX_GLES_VERSION
 
 #ifdef _WIN32
-#   ifdef LBXGLES_VERSION // LBX-GLES 라이브러리의 버전
+#   ifdef LBX_GL_DLL // LBX-GLES 라이브러리의 버전
 #       define LBX_GL_EXPORT __declspec(dllexport)
-#   else //#ifdef lbx_gl_DLL
+#   else //#ifdef LBX_GL_DLL
 #       define LBX_GL_EXPORT __declspec(dllimport)
-#   endif //#else #ifdef lbx_gl_DLL
+#   endif //#else #ifdef LBX_GL_DLL
 #else //#ifdef _WIN32
 #   define LBX_GL_EXPORT
 #endif //#else #ifdef _WIN32

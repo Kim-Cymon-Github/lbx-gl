@@ -18,16 +18,18 @@
 u32_t lbx_gl_version(void) { return version_(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, BUILD_NUMBER); }
 
 
-#ifdef GLES
+#ifdef LBX_GLES_VERSION
 #   ifdef IS_WINDOWS
 #       pragma comment (lib, "libEGL")
 #       pragma comment (lib, "libGLESv2")  // 이유는 알 수 없으나 직접 프로젝트에 추가해야 정상 동작함
 #   endif //#ifdef IS_WINDOWS
-#   if GLES == 20
+#   if LBX_GLES_VERSION == 20
 #       define LBX_RENDERABLE_TYPE EGL_OPENGL_ES2_BIT
-#   elif GLES >= 30 //#if GLES == 20
+#   elif LBX_GLES_VERSION >= 30 //#if LBX_GLES_VERSION == 20
 #       define LBX_RENDERABLE_TYPE EGL_OPENGL_ES3_BIT
-#   endif //#elif GLES >= 30 #if GLES == 20
+#   endif //#elif LBX_GLES_VERSION >= 30 #if LBX_GLES_VERSION == 20
+#else
+#   pragma comment (lib, "opengl32")
 #endif
 
 #ifdef _WIN32
@@ -166,9 +168,9 @@ i32_t RC_Init(LBX_RENDER_CONTEXT *ctx, EGLContext context_to_share, EGLint const
     bool is_first = (interlocked_increment(&gles_instances) == 1);
     EGLint err = EGL_SUCCESS;
 
-#ifdef GLES
-    Log_("Initializing OpenGL ES %d.%d", GLES/10, GLES%10);
-#endif //ifdef GLES
+#ifdef LBX_GLES_VERSION
+    Log_("Initializing OpenGL ES %d.%d", LBX_GLES_VERSION /10, LBX_GLES_VERSION %10);
+#endif //ifdef LBX_GLES_VERSION
 
     // Log_("  native_window=0x%X, display=0x%X", native_window, native_display );
 
@@ -409,12 +411,12 @@ GLuint lbxGlBindBuffer(GLenum target, GLuint buffer)
     case GL_ELEMENT_ARRAY_BUFFER:
         glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &prev_binding);
         break;
-#if GLES >= 30
+#if LBX_GLES_VERSION >= 30
     case GL_UNIFORM_BUFFER:
         glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &prev_binding);
         break;
 #endif
-#if GLES >= 31
+#if LBX_GLES_VERSION >= 31
     case GL_SHADER_STORAGE_BUFFER:
         glGetIntegerv(GL_SHADER_STORAGE_BUFFER_BINDING, &prev_binding);
         break;

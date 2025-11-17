@@ -75,11 +75,14 @@ class LBX_GL_EXPORT TGLObject
 {
 protected:
     GLuint handle;
+    u32_t flags;
+
 public:
     TGLObject();
     virtual ~TGLObject();
 
     virtual GLuint GetHandle(void);
+    virtual void SetHandle(GLuint h);
     inline bool Initialized(void) {return handle != 0;}
 };
 
@@ -99,7 +102,6 @@ typedef enum {
 class LBX_GL_EXPORT TGLShader : public TGLObject
 {
 private:
-    u32_t flags;
 protected:
     void CreateGLObject(GLenum type);
     i32_t GetIntParam(GLenum pname);
@@ -160,9 +162,10 @@ class LBX_GL_EXPORT TGLBufferBase;
 
 class LBX_GL_EXPORT TGLProgram : public TGLObject
 {
+private:
+    typedef TGLObject inherited;
 protected:
     TGLShader * shaders[2];
-    u32_t flags;
     i32_t GetIntParam(GLenum pname);
 
 /*
@@ -179,9 +182,9 @@ protected:
     void Analyze(void);
 
     enum TGLProgramFlags {
-        pfLinked = 0x01u,
-        pfOwnsFragmentShader = 0x02u,
-        pfOwnsVertexShader = 0x04u,
+        pfLinked = 0x0100u,
+        pfOwnsVertexShader = 0x0200u,
+        pfOwnsFragmentShader = 0x0400u, // pfOwnsFragmentShader << 1u로 정의되어야 함
     };
 
     void SetShader(i32_t index, TGLShader *shader); // 내부 목적으로만 사용
@@ -190,6 +193,7 @@ protected:
     size_t SaveToMem(void** p_svm, GLenum* bin_format = NULL);
 public:
     TGLProgram();
+    TGLProgram(uintptr_t gfx_native_handle);
     TGLProgram(const char *file_name, GLenum bin_format);
     TGLProgram(TGLVertexShader *v, TGLFragmentShader * f);
     TGLProgram(const char *vshader, const char *fshader, const char *hdr = NULL);
@@ -198,6 +202,7 @@ public:
     virtual ~TGLProgram();
 
     virtual GLuint GetHandle(void);
+    virtual void SetHandle(GLuint gfx_native_handle);
 
     void SetShader(TGLShader *shader);
     TGLFragmentShader * GetFragmentShader(void);
@@ -317,8 +322,8 @@ class LBX_GL_EXPORT TLBTexture : public TGLObject
 private:
     typedef TGLObject inherited;
 protected:
-    i64_t LoadFromFile(const char *file_name, i32_t target = -1);
-    i64_t LoadFromStream(LBX_STREAM *s, i32_t target = -1);
+    i64_t LoadFromFile(const char *file_name, i32_t target = -1, LBX_IMAGE_USER_DATA_CALLBACK user_data_handler = NULL, void* user_context = NULL);
+    i64_t LoadFromStream(LBX_STREAM *s, i32_t target = -1, LBX_IMAGE_USER_DATA_CALLBACK user_data_handler = NULL, void *user_context = NULL);
 
     size_t Load(LBX_IMAGE *img);
 
@@ -328,7 +333,11 @@ public:
     virtual i32_t SetImage(const LBX_IMAGE *img, i32_t target = -1) = 0;
 
     LBX_IMAGE image_format;
-    bool keep_image_data; ///< keep image data on cpu memory after loading a texture data
+
+    static const u32_t MASK_KeepImageData = 0x0100u; 
+
+    void SetKeepImageData(bool Value) { set_flag32(&flags, MASK_KeepImageData, Value); }
+    bool KeepImageData(void) { return get_flag32(flags, MASK_KeepImageData); }
     virtual GLuint GetHandle(void);
 };
 
@@ -342,8 +351,8 @@ public:
     virtual ~TGLTexture3D();
 
     virtual i32_t SetImage(const LBX_IMAGE *img, i32_t target);
-    inline i64_t LoadFromFile(const char *file_name, i32_t target) {return inherited::LoadFromFile(file_name, target);}
-    inline i64_t LoadFromStream(LBX_STREAM *s, i32_t target) {return inherited::LoadFromStream(s, target);}
+    inline i64_t LoadFromFile(const char *file_name, i32_t target, LBX_IMAGE_USER_DATA_CALLBACK user_data_handler = NULL, void* user_context = NULL) {return inherited::LoadFromFile(file_name, target, user_data_handler, user_context);}
+    inline i64_t LoadFromStream(LBX_STREAM *s, i32_t target, LBX_IMAGE_USER_DATA_CALLBACK user_data_handler = NULL, void* user_context = NULL) {return inherited::LoadFromStream(s, target, user_data_handler, user_context);}
 
     inline void Bind(void) {glBindTexture(GL_TEXTURE_CUBE_MAP, GetHandle());}
 
@@ -359,8 +368,8 @@ public:
     virtual ~TGLTexture2D();
 
     virtual i32_t SetImage(const LBX_IMAGE *img, i32_t target = -1);
-    inline i64_t LoadFromFile(const char *file_name) {return inherited::LoadFromFile(file_name, GL_TEXTURE_2D);}
-    inline i64_t LoadFromStream(LBX_STREAM *s) {return inherited::LoadFromStream(s, GL_TEXTURE_2D);}
+    inline i64_t LoadFromFile(const char *file_name, LBX_IMAGE_USER_DATA_CALLBACK user_data_handler = NULL, void* user_context = NULL) {return inherited::LoadFromFile(file_name, GL_TEXTURE_2D, user_data_handler, user_context);}
+    inline i64_t LoadFromStream(LBX_STREAM *s, LBX_IMAGE_USER_DATA_CALLBACK user_data_handler = NULL, void* user_context = NULL) {return inherited::LoadFromStream(s, GL_TEXTURE_2D, user_data_handler, user_context);}
 
     inline void Bind(void) {glBindTexture(GL_TEXTURE_2D, GetHandle());}
 };
@@ -418,7 +427,8 @@ public:
     void ClearBase(void);
     void ClearBorder(void);
 
-    i32_t FillVertexList(vec2_f32 *target, rect_f32 area, i32_t target_stride = 0);
+    i32_t FillVertexList(vec2_f32* target, vec2_f32 p0, vec2_f32 p1, i32_t target_stride = 0);
+    inline i32_t FillVertexList(vec2_f32* target, rect_f32 area, i32_t target_stride = 0) { return FillVertexList(target, vec2_f32_(area.left, area.top), vec2_f32_(area.right, area.bottom), target_stride); }
 
     i32_t BuildDrawList(void *buffer, const LBX_GLBUFFER_DESC *buffer_info, i16_t *indice, rect_f32 target);
 
@@ -774,10 +784,9 @@ public:
 
     void FillBuffer(V2CT *dst, TGlyph *glyph, rect_f32 area, u32_t color);
 
-    i32_t AddGlyph(TGlyph *glyph, rect_f32 area, u32_t color);
-    inline i32_t AddGlyph(TGlyph *glyph, xywh_f32 area, u32_t color) {
-            return AddGlyph(glyph, rect_f32_(area.x, area.y, area.x + area.width, area.y + area.height), color
-        );}
+    i32_t AddGlyph(TGlyph* glyph, vec2_f32 p0, vec2_f32 p1, u32_t color);
+    inline i32_t AddGlyph(TGlyph* glyph, rect_f32 area, u32_t color) { return AddGlyph(glyph, vec2_f32_(area.left, area.top), vec2_f32_(area.right, area.bottom), color); }
+    inline i32_t AddGlyph(TGlyph *glyph, xywh_f32 area, u32_t color) { return AddGlyph(glyph, vec2_f32_(area.x, area.y), vec2_f32_(area.x + area.width, area.y + area.height), color);}
     i32_t AddLines(vec2_f32 *lines_vertice, i32_t line_count, u32_t color);
 
     i32_t Draw(void);
@@ -832,7 +841,6 @@ private:
         owns_texture = 1
     };
 protected:
-    u32_t flags;
     TGLTexture2D *tex;
 //    GLuint tex;
     GLuint depth;

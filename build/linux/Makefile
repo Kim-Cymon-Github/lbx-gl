@@ -40,8 +40,6 @@ DEFS= \
 #	-DMAX_PERFORMANCE_CHECK \
 #	-DEGL_EGLEXT_PROTOTYPES=1 \
 
-#GLFLAGS+=-lEGL -lGLESv2
-
 LDFLAGS=-L$(OUT_PATH) -lrt -lm -lpthread -lEGL -lGLESv2 -llbx-core
 
 CFLAGS+=$(INC) $(DEFS) -Wall -Wstrict-aliasing=0
@@ -52,7 +50,7 @@ ifeq ($(LBX_GPU), POWERVR)
 	DEFS+=-DPOWERVR=1
 endif
 
-DEFS+=-DGLES=32
+DEFS+=-DLBX_GLES_VERSION=32
 
 all: $(TARGET) $(STATIC_TARGET) $(TEST_TARGET)
 
