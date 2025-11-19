@@ -412,10 +412,10 @@ public:
     TGlyph(TGLTexture2D *tex);
     ~TGlyph();
     TGLTexture2D *texture;
-    void SetSourceRegion(rect_i16 rect);
-    inline void SetSourceRegion(xywh_i16 xywh) { SetSourceRegion(rect_i16_(xywh.x, xywh.y, xywh.x + xywh.width, xywh.y + xywh.height));}
-    inline void SetSourceRegion(i32_t left, i32_t top, i32_t right, i32_t bottom) { SetSourceRegion(rect_i16_(left, top, right, bottom));}
-    inline void SetSourceRegionXYWH(i32_t x, i32_t y, i32_t width, i32_t height) { SetSourceRegion(rect_i16_(x, y, x+width, y+height));}
+    void SetBoundary(rect_i16 rect);
+    inline void SetBoundary(xywh_i16 xywh) { SetBoundary(rect_i16_(xywh.x, xywh.y, xywh.x + xywh.width, xywh.y + xywh.height));}
+    inline void SetBoundary(i32_t left, i32_t top, i32_t right, i32_t bottom) { SetBoundary(rect_i16_(left, top, right, bottom));}
+    inline void SetBoundaryXYWH(i32_t x, i32_t y, i32_t width, i32_t height) { SetBoundary(rect_i16_(x, y, x+width, y+height));}
     void FitTo(rect_i16 rect);
     inline void FitTo(xywh_i16 xywh) {FitTo(rect_i16_(xywh.x, xywh.y, xywh.x + xywh.width, xywh.y + xywh.height));}
     inline void FitTo(i32_t left, i32_t top, i32_t right, i32_t bottom) {FitTo(rect_i16_(left, top, right, bottom));}
@@ -445,6 +445,8 @@ public:
     inline void Bind(void) {texture->Bind();}
 
     inline rect_f32 GetBoundary(void) const {return boundary;}
+    inline const rect_f32* GetFit(void) { return fit; }
+    inline const rect_f32* GetBorder(void) { return border; }
 };
 
 //===========================================================================
