@@ -44,6 +44,11 @@ LDFLAGS=-L$(OUT_PATH) -lrt -lm -lpthread -lEGL -lGLESv2 -llbx-core
 
 CFLAGS+=$(INC) $(DEFS) -Wall -Wstrict-aliasing=0
 
+ifneq ($(strip $(PKG_CONFIG)),)
+	LDFLAGS+=$(shell pkg-config --libs gbm libdrm)
+	CFLAGS+=$(shell pkg-config --cflags gbm libdrm)
+endif
+
 #-Wall 
 
 ifeq ($(LBX_GPU), POWERVR)
