@@ -384,10 +384,7 @@ i32_t LBX_IMAGE_BindTextures(const LBX_IMAGE* self)
             }
             // 성공적으로 바인딩된 텍스처 개수 증가
             ++ret;
-        } else {
-            // 텍스처 값이 0이면 더 이상 바인딩할 텍스처가 없으므로 반복 종료
-            break;
-        }
+        } 
     }
 
     // 바인딩된 텍스처 개수를 반환
