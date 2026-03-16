@@ -224,7 +224,7 @@ TGLTexture3D::~TGLTexture3D()
 //---------------------------------------------------------------------------
 i32_t TGLTexture3D::SetImage(const LBX_IMAGE *img, i32_t target)
 {
-    size2_i16 sz = img->planes[0].size;
+    size2_i32 sz = img->planes[0].size;
     GLenum fmt;
 
     fmt = get_gl_format(img->pixel_format);
@@ -261,7 +261,7 @@ TGLTexture2D::~TGLTexture2D()
 i32_t TGLTexture2D::SetImage(const LBX_IMAGE *img, i32_t target)
 {
     //fourcc_t pf = img->pixel_format;
-    size2_i16 sz = img->planes[0].size;
+    size2_i32 sz = img->planes[0].size;
     GLenum fmt;
 
     GetHandle();
@@ -307,7 +307,7 @@ i32_t TGLTexture2D::SetImage(const LBX_IMAGE *img, i32_t target)
 // 이미지의 하단을 향하게 되어 그냥 렌더링하면 상하가 뒤집혀서 표시된다.
 // 즉, 완벽하게 GDI에서의 이미지 좌표계와 일치하게 된다.
 
-static inline void xywh_to_rect(rect_f32 *dst, i32_t x, i32_t y, i32_t width, i32_t height, size2_i16 res)
+static inline void xywh_to_rect(rect_f32 *dst, i32_t x, i32_t y, i32_t width, i32_t height, size2_i32 res)
 {
     vec2_f32 sc = vec2_f32_(1.0f / (f32_t)res.width, 1.0f / (f32_t)res.height);
     dst->left = (f32_t)x * sc.x;
@@ -316,7 +316,7 @@ static inline void xywh_to_rect(rect_f32 *dst, i32_t x, i32_t y, i32_t width, i3
     dst->bottom = 1.0f - ((f32_t)(y + height) * sc.y);
 }
 
-static inline void rect_normalize(rect_f32 *out, rect_i16 in, size2_i16 res)
+static inline void rect_normalize(rect_f32 *out, rect_i16 in, size2_i32 res)
 {
     vec2_f32 sc  = vec2_f32_(1.0f / (f32_t)res.width, 1.0f / (f32_t)res.height);
     out->left   = (f32_t)in.left   * sc.x;
@@ -445,7 +445,7 @@ static inline void swap_f32(f32_t* a, f32_t* b) { f32_t tmp = *a; *a = *b; *b = 
 
 i32_t TGlyph::FillVertexList(vec2_f32* target, vec2_f32 p0, vec2_f32 p1, i32_t target_stride)
 {
-    size2_i16 res = texture->image_format.planes[0].size;
+    size2_i32 res = texture->image_format.planes[0].size;
     vec2_f32* p[16];
     vec2_f32 sc = scale; 
 
