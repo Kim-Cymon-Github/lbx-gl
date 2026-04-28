@@ -748,7 +748,6 @@ bool TGLShader::IsCompiled(void)
 {
     return flags & (u32_t)(sfCompiled);
 }
-
 //---------------------------------------------------------------------------
 
 
