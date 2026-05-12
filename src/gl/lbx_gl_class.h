@@ -466,7 +466,7 @@ public:
     inline void * GetLocalData(void) {return local_data;}
     void * AppendLocalData(i32_t count, i32_t elem_size);
     void * InsertLocalData(i32_t index, i32_t count, i32_t elem_size);
-    inline void ClearLocalData(void) {SVEC_FREE(&local_data);}
+    inline void ClearLocalData(void) {SVEC_DROP(&local_data);}
     inline i32_t GetElemSize(void) {return svec_elem_size(local_data);}
 };
 
@@ -831,7 +831,7 @@ TGLBuffer<T>::TGLBuffer()
 template <class T>
 TGLBuffer<T>::~TGLBuffer()
 {
-    svec_free((void**)&data);
+    svec_drop((void**)&data);
 }
 
 

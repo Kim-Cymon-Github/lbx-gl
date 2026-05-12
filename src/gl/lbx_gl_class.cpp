@@ -74,7 +74,7 @@ size_t stream_write_glprogram(LBX_STREAM* s, GLuint h_prog, GLenum *bin_format)
     void *buf = svec_from_glprogram(h_prog, &bf);
     size_t r = stream_write_box_header(s, bf, svec_size(buf));
     r += stream_write(s, buf, svec_size(buf));
-    svec_free(&buf);
+    svec_drop(&buf);
     if (bin_format) {
         *bin_format = bf;
     }
@@ -345,7 +345,7 @@ TGlyph::~TGlyph()
 {
     ClearBase();
     ClearBorder();
-    SVEC_FREE(&tex_coord);
+    SVEC_DROP(&tex_coord);
 }
 //---------------------------------------------------------------------------
 void TGlyph::ClearBase(void)
@@ -673,7 +673,7 @@ i32_t TGLShader::SetBinary(LBX_STREAM *strm)
     }
 */
     ret = Load(b, l, GL_MALI_SHADER_BINARY_ARM);
-    SVEC_FREE(&b);
+    SVEC_DROP(&b);
     return ret;
 
 }
@@ -868,11 +868,11 @@ TGLProgram::~TGLProgram()
     if (handle > 0) {
         GL_CHECK(glDeleteProgram(handle));
     }
-    SVEC_FREE(&attrib_types);
+    SVEC_DROP(&attrib_types);
     for (i32_t i = svec_len32(attrib_data) - 1; i >= 0; i--) {
         free_memory(attrib_data[i]);
     }
-    SVEC_FREE(&attrib_data);
+    SVEC_DROP(&attrib_data);
 }
 //---------------------------------------------------------------------------
 GLuint TGLProgram::GetHandle(void)
@@ -1050,7 +1050,7 @@ i64_t TGLProgram::SaveToStream(LBX_STREAM *s, GLenum* bin_format)
         r += stream_write(s, buf, svec_size(buf));
     }
 
-    svec_free(&buf);
+    svec_drop(&buf);
     return r;
 }
 //---------------------------------------------------------------------------
@@ -1607,7 +1607,7 @@ TGLAttribBuffer::TGLAttribBuffer(void *data, i32_t size, GLenum usage)
 
 TGLAttribBuffer::~TGLAttribBuffer()
 {
-    SVEC_FREE(&bd);
+    SVEC_DROP(&bd);
 }
 
 bool TGLAttribBuffer::Register(const char* struct_id)
@@ -1618,7 +1618,7 @@ bool TGLAttribBuffer::Register(const char* struct_id)
     i32_t size = 0;
     u16_t offset = 0;
 
-    SVEC_FREE(&bd);
+    SVEC_DROP(&bd);
     
     const char* s = struct_id;
     for (i = 0; i < len; ++i) {
@@ -1674,7 +1674,7 @@ TGLAttribBuffer & TGLAttribBuffer::Register(char attrib_type, LBX_TYPE data_type
 
 i32_t TGLAttribBuffer::Register(const LBX_REFL_STRUCT_INFO *rtti)
 {
-    SVEC_FREE(&bd);
+    SVEC_DROP(&bd);
     LBX_REFL_MEMBER_ITERATOR it = refl_get_member_iterator(rtti);
     const LBX_REFL_MEMBER_INFO *mi;
     i32_t r = 0;
@@ -1943,9 +1943,9 @@ void TGLAttribBinder::Clear(void)
     i32_t i, i_end;
     i_end = svec_len32(bi);
     for (i = 0; i < i_end; i++) {
-        svec_free((void**)(bi + i));
+        svec_drop((void**)(bi + i));
     }
-    svec_free((void**)&bi);
+    svec_drop((void**)&bi);
 }
 //---------------------------------------------------------------------------
 
@@ -2006,9 +2006,9 @@ void TGLCommandList::Clear(void)
 {
     i32_t i, i_end = Count();
     for (i = 0; i < i_end; i++) {
-        SVEC_FREE(&(list[i].indice));
+        SVEC_DROP(&(list[i].indice));
     }
-    SVEC_FREE(&list);
+    SVEC_DROP(&list);
 }
 
 LBX_RENDER_COMMAND * TGLCommandList::Add(GLenum method, bool *visible)
@@ -2366,7 +2366,7 @@ void TGLFrameBufferObject::Release(void)
 GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
 {
     GLint n_fbo;
-#if GLES > 20
+#if LBX_GLES_VERSION > 20
     GLenum status = GL_FRAMEBUFFER_UNDEFINED;
 #else
     GLenum status = GL_FRAMEBUFFER_UNSUPPORTED;
@@ -2405,7 +2405,7 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
     if (size_changed || sample_changed) {
         // 렌더버퍼(깊이버퍼)를 바인딩하고
         GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, depth));
-#if GLES > 20
+#if LBX_GLES_VERSION > 20
         if (samples > 1) {
             // 렌더버퍼(깊이버퍼)의 용량을 재조정 하고
             GL_CHECK(glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, LBX_GL_DEPTH_COMPONENT, sz.width, sz.height));
@@ -2413,7 +2413,7 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
             // 렌더버퍼(깊이버퍼)의 용량을 재조정 하고
 #endif
             GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, LBX_GL_DEPTH_COMPONENT, sz.width, sz.height));
-#if GLES > 20
+#if LBX_GLES_VERSION > 20
         }
 #endif
         // 다시 연결해준다.
@@ -2428,7 +2428,7 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
             Info_("Texture Created: %d", tex->GetHandle());
         }
         tex->Bind();
-#if GLES > 20
+#if LBX_GLES_VERSION > 20
         if (samples == 1) {
 #endif
             // 텍스쳐를 바인딩하고
@@ -2438,7 +2438,7 @@ GLenum TGLFrameBufferObject::Update(size2_i16 new_size, i32_t new_samples)
             // 텍스쳐 크기 변경
             GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sz.width, sz.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
             GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->GetHandle(), 0)); // 마지막은 mipmap 레벨임
-#if GLES > 20
+#if LBX_GLES_VERSION > 20
         } else {
             GL_CHECK(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, tex->GetHandle()));
             // 파라미터 설정
