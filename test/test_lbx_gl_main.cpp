@@ -22,7 +22,6 @@ i32_t main(void)
 #ifdef _WIN32
     system("chcp 65001");
 #endif //#ifdef _WIN32
-    check_memory_usage(true); // reset
     tick_set_start(); // tick 초기화
     change_log_handler(&simple_console_log_handler); // 로그 핸들러 연결
 
@@ -30,6 +29,4 @@ i32_t main(void)
     Info_("lbx-gl library function test (version " VERSION_VFMT ")", VERSION_VARG(ver));
 
     test();
-
-    check_memory_usage(false); // reset
 }
