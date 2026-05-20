@@ -369,7 +369,7 @@ static i32_t LBX_API ext_image_import_(LBX_EXT_IMAGE_INTERFACE *self, LBX_IMAGE 
     w    = img->planes[0].size.width;
     h    = img->planes[0].size.height;
     n    = img->plane_count ? img->plane_count : 1;
-    if (n > LBX_IMAGE_MAX_PLANES) n = LBX_IMAGE_MAX_PLANES;
+    if (n > LBX_IMAGE_MAX_PLANES) { n = LBX_IMAGE_MAX_PLANES; }
     fd0  = (i32_t)img->planes[0].native_handle;
 
     if (fd0 >= 0) {
@@ -461,7 +461,7 @@ static void LBX_API ext_image_destroy_(LBX_EXT_IMAGE_INTERFACE *self, LBX_IMAGE 
     }
     disp = (EGLDisplay)self->ctx;
     tex  = img->planes[0].texture;
-    if (tex < 0) tex = -tex;
+    if (tex < 0) { tex = -tex; }
     if (tex != 0) {
         GLuint t = (GLuint)tex;
         glDeleteTextures(1, &t);
