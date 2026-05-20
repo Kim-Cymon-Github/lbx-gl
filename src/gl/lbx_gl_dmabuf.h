@@ -19,7 +19,7 @@
 #define lbx_gl_dmabufH
 
 #include "lbx_gl.h"
-#include "intf/lbx_intf_avio.h"   /* LBX_GFX (백엔드 주입 vtable) */
+#include "intf/lbx_intf_avio.h"   /* LBX_EXT_IMAGE_INTERFACE */
 
 #ifdef __cplusplus
 extern "C" {
@@ -86,33 +86,30 @@ LBX_GL_EXPORT void lbx_gl_destroy_dmabuf_image(EGLDisplay egl_display, EGLImageK
 LBX_GL_EXPORT void lbx_gl_image_target_texture(GLenum target, EGLImageKHR image);
 
 /**
- * @brief LBX_GFX 백엔드 생성 (GL 임시 구현) — 모델 A "백엔드 주입".
+ * @brief LBX_EXT_IMAGE_INTERFACE 의 GL 구현 — 값으로 반환.
  *
- * host 가 1회 생성해 Open 후 LBX_AVIO_DEVICE.gfx 에 주입한다. 드라이버가
- * 자기 버퍼 lifecycle(Import/Update/Destroy)에서 호출 — 드라이버는 GL 을
- * 모르고 LBX_GFX vtable 만 안다. host 는 백엔드 생성·주입·draw 만.
+ * 외부 이미지 인터페이스 (driver 의 V4L2 DMA-BUF 또는 CPU 메모리 이미지를
+ * GPU 텍스처로 import/update/destroy) 의 GL 구현체. host 는 이 함수가
+ * 돌려준 값을 LBX_AVIO_DRIVER.ext_image 에 직접 박는다 — 객체 생성·파괴
+ * 절차 없음. 함수 포인터들은 lbx-gl 의 정적 export, ctx 는 EGLDisplay 를
+ * 그대로 보관 (별도 수명 관리 대상 아님).
  *
- * 백엔드는 스테이트리스 — 핸들은 드라이버의 버퍼별 영속 LBX_IMAGE 가
- * 보유(planes[0].texture: 부호 규약 음수=external OES/양수=2D/0=미생성,
+ * 인터페이스는 스테이트리스 — 핸들은 driver 의 버퍼별 영속 LBX_IMAGE 가
+ * 보유 (planes[0].texture: 부호 규약 음수=external OES/양수=2D/0=미생성,
  * user_data: DMA-BUF 의 EGLImageKHR). Import 는 버퍼당 1회 생성,
- * Update 는 CPU 재업로드(드라이버가 내용 변경 알 때만 호출, DMA-BUF 는
+ * Update 는 CPU 재업로드 (driver 가 내용 변경 알 때만 호출, DMA-BUF 는
  * zero-copy no-op), Destroy 는 Import 와 대칭 파괴.
  *
  * vtable 호출은 렌더 컨텍스트 current 스레드에서 이뤄져야 한다.
  *
- * NOTE: lbx-gfx 가 lbx-gl 을 대체하면 이 구현을 lbx-gfx 로 이식. LBX_GFX
- *       seam 이 백엔드 중립이라 드라이버/host 무변경(이 create 만 교체).
+ * NOTE: lbx-gfx 가 lbx-gl 을 대체하면 본 구현을 lbx-gfx 로 옮긴다.
+ *       LBX_EXT_IMAGE_INTERFACE seam 이 백엔드 중립이라 driver/host 는
+ *       무변경 — 이 헬퍼 1개만 lbx-gfx 의 동등물로 교체.
  *
- * @param egl_display  현재 EGLDisplay (백엔드 ctx 에 보관)
- * @return LBX_GFX* (lbx_gl_backend_destroy 로 해제), 실패 시 NULL
+ * @param egl_display  현재 EGLDisplay (인터페이스 ctx 에 그대로 보관)
+ * @return 값으로 채워진 LBX_EXT_IMAGE_INTERFACE (ctx + 함수 포인터 3개)
  */
-LBX_GL_EXPORT LBX_GFX *lbx_gl_backend_create(EGLDisplay egl_display);
-
-/**
- * @brief LBX_GFX 백엔드 해제. host 가 컨텍스트 종료 시 1회.
- *        (텍스처/EGLImage 자체는 드라이버가 Close 에서 Destroy 로 회수.)
- */
-LBX_GL_EXPORT void lbx_gl_backend_destroy(LBX_GFX *gfx);
+LBX_GL_EXPORT LBX_EXT_IMAGE_INTERFACE lbx_gl_external_image(EGLDisplay egl_display);
 
 #endif /* LBX_GLES_VERSION */
 

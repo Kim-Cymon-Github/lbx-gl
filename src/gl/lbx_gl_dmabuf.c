@@ -312,40 +312,37 @@ void lbx_gl_image_target_texture(GLenum target, EGLImageKHR image)
 }
 
 /*---------------------------------------------------------------------------
- * LBX_GFX 백엔드 (GL 임시 구현) — 모델 A "백엔드 주입"
+ * LBX_EXT_IMAGE_INTERFACE 의 GL 구현
  *
- * GPU 리소스 수명 = 버퍼 수명. 버퍼 수명은 드라이버가 안다(REQBUFS/
- * Recover/Close). 그래서 드라이버가 자기 버퍼 lifecycle 에서 이 백엔드의
- * Import/Update/Destroy 를 호출한다(드라이버는 GL 모름, LBX_GFX vtable 만).
+ * 외부 이미지 인터페이스 (도메인 표준 — EGL OES_EGL_image_external,
+ * VK KHR_external_memory 호응) 의 GL backend. driver 의 V4L2 DMA-BUF
+ * 또는 CPU 메모리 이미지를 GPU 텍스처로 import/update/destroy.
  *
- * 백엔드는 "스테이트리스" — 전역 슬롯 테이블 없음. 핸들은 드라이버의
- * 버퍼별 영속 LBX_IMAGE 가 보유:
+ * GPU 리소스 수명 = 버퍼 수명. 버퍼 수명은 driver 가 안다(REQBUFS/Recover/
+ * Close). 그래서 driver 가 자기 버퍼 lifecycle 에서 본 인터페이스의
+ * Import/Update/Destroy 를 호출 (driver 는 GL 모름, vtable 만).
+ *
+ * 스테이트리스 — 전역 슬롯 테이블 없음. 핸들은 driver 의 버퍼별 영속
+ * LBX_IMAGE 가 보유:
  *   img->planes[0].texture : GL 텍스처 (부호 규약: 음수 external OES /
- *                            양수 2D, 0 = 미생성)
+ *                            양수 2D, 0 = 미생성) — GL backend 내부 약속
  *   img->user_data         : DMA-BUF 경로의 EGLImageKHR (CPU 는 0)
  *
- * Import  : 버퍼당 1회. 텍스처 생성 + (CPU 면 초기 업로드).
- * Update  : CPU 재업로드 (드라이버가 내용 변경 알 때만 호출. 백엔드는
- *           무조건 업로드 — 게이팅은 드라이버 책임). DMA-BUF 는 no-op
- *           (zero-copy: 같은 dmabuf 메모리에 새 프레임 자동 반영).
- * Destroy : 텍스처+EGLImage 파괴, 핸들 0 리셋. Import 와 대칭.
+ * 객체 생성·파괴 없음. lbx_gl_external_image() 가 vtable + ctx 묶음 값을
+ * 돌려주고 host 가 그 값을 LBX_AVIO_DRIVER.ext_image 에 직접 박는다.
+ * ctx 는 EGLDisplay 그대로 (별도 packing 불요).
  *
- * 렌더 컨텍스트 current 스레드에서 호출돼야 한다 (드라이버 Open/Grab/
+ * 렌더 컨텍스트 current 스레드에서 호출돼야 한다 (driver 의 Open/Grab/
  * Recover/Close 를 host 가 자기 GL 스레드에서 부른다는 가정 — dispatcher
  * 구조와 동일).
  *
- * NOTE(이식): lbx-gfx 가 개발 완료되어 lbx-gl 을 대체할 때, 이 백엔드
- * 구현을 lbx-gfx 로 옮긴다. LBX_GFX seam 이 백엔드 중립이라 드라이버/
- * host 는 무변경 (host 가 부르는 *_backend_create 만 교체).
+ * NOTE(이식): lbx-gfx 가 lbx-gl 을 대체할 때 본 구현을 lbx-gfx 로 옮긴다.
+ * LBX_EXT_IMAGE_INTERFACE seam 이 백엔드 중립이라 driver/host 는 무변경.
  *---------------------------------------------------------------------------*/
-
-typedef struct {
-    EGLDisplay disp;
-} LbxGlBackendCtx;
 
 /* CPU 업로드 src/internalformat 결정 — 정규화된 fourcc 기준.
  * GLES 는 glTexImage2D 의 internalformat == format 강제(GL_BGRA_EXT 규약). */
-static void backend_cpu_fmt_(u32_t fcc, GLenum *src, GLenum *ifmt)
+static void cpu_fmt_(u32_t fcc, GLenum *src, GLenum *ifmt)
 {
     *src  = GL_RGBA;
     *ifmt = GL_RGBA;
@@ -360,20 +357,20 @@ static void backend_cpu_fmt_(u32_t fcc, GLenum *src, GLenum *ifmt)
     }
 }
 
-static i32_t LBX_API backend_import_(LBX_GFX *self, LBX_IMAGE *img)
+static i32_t LBX_API ext_image_import_(LBX_EXT_IMAGE_INTERFACE *self, LBX_IMAGE *img)
 {
-    LbxGlBackendCtx *cx;
+    EGLDisplay disp;
     i32_t w, h, n, fd0;
 
     if (self == NULL || img == NULL) {
         return -1;
     }
-    cx = (LbxGlBackendCtx *)self->ctx;
-    w  = img->planes[0].size.width;
-    h  = img->planes[0].size.height;
-    n  = img->plane_count ? img->plane_count : 1;
+    disp = (EGLDisplay)self->ctx;
+    w    = img->planes[0].size.width;
+    h    = img->planes[0].size.height;
+    n    = img->plane_count ? img->plane_count : 1;
     if (n > LBX_IMAGE_MAX_PLANES) n = LBX_IMAGE_MAX_PLANES;
-    fd0 = (i32_t)img->planes[0].native_handle;
+    fd0  = (i32_t)img->planes[0].native_handle;
 
     if (fd0 >= 0) {
         /* DMA-BUF 경로 (실 V4L2). EGLImage+텍스처 생성, 핸들은 img 가 보유. */
@@ -389,7 +386,7 @@ static i32_t LBX_API backend_import_(LBX_GFX *self, LBX_IMAGE *img)
             pitches[p] = (u32_t)img->planes[p].stride.y;
         }
         eimg = lbx_gl_create_dmabuf_image(
-            cx->disp, w, h, img->pixel_format, img->native_handle,
+            disp, w, h, img->pixel_format, img->native_handle,
             n, fds, offsets, pitches, NULL);
         if (eimg == EGL_NO_IMAGE_KHR) {
             return -1;
@@ -412,7 +409,7 @@ static i32_t LBX_API backend_import_(LBX_GFX *self, LBX_IMAGE *img)
         /* CPU 버퍼 경로 (avio-file). 텍스처 생성 + 초기 업로드. */
         GLenum src, ifmt;
         GLuint t = 0;
-        backend_cpu_fmt_(img->pixel_format, &src, &ifmt);
+        cpu_fmt_(img->pixel_format, &src, &ifmt);
         glGenTextures(1, &t);
         glBindTexture(GL_TEXTURE_2D, t);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -429,7 +426,7 @@ static i32_t LBX_API backend_import_(LBX_GFX *self, LBX_IMAGE *img)
     return -1;
 }
 
-static i32_t LBX_API backend_update_(LBX_GFX *self, LBX_IMAGE *img)
+static i32_t LBX_API ext_image_update_(LBX_EXT_IMAGE_INTERFACE *self, LBX_IMAGE *img)
 {
     GLenum src, ifmt;
     intptr_t tex;
@@ -443,27 +440,27 @@ static i32_t LBX_API backend_update_(LBX_GFX *self, LBX_IMAGE *img)
     if (tex <= 0) {
         return 0;
     }
-    /* CPU 재업로드. 드라이버가 "내용 실제 변경" 일 때만 호출하므로
-     * 백엔드는 무조건 업로드 (게이팅 책임은 드라이버). */
+    /* CPU 재업로드. driver 가 "내용 실제 변경" 일 때만 호출하므로
+     * 백엔드는 무조건 업로드 (게이팅 책임은 driver). */
     w = img->planes[0].size.width;
     h = img->planes[0].size.height;
-    backend_cpu_fmt_(img->pixel_format, &src, &ifmt);
+    cpu_fmt_(img->pixel_format, &src, &ifmt);
     glBindTexture(GL_TEXTURE_2D, (GLuint)tex);
     glTexImage2D(GL_TEXTURE_2D, 0, ifmt, w, h, 0,
                  src, GL_UNSIGNED_BYTE, (const void *)img->planes[0].data);
     return 0;
 }
 
-static void LBX_API backend_destroy_(LBX_GFX *self, LBX_IMAGE *img)
+static void LBX_API ext_image_destroy_(LBX_EXT_IMAGE_INTERFACE *self, LBX_IMAGE *img)
 {
-    LbxGlBackendCtx *cx;
+    EGLDisplay disp;
     intptr_t tex;
     EGLImageKHR eimg;
     if (self == NULL || img == NULL) {
         return;
     }
-    cx  = (LbxGlBackendCtx *)self->ctx;
-    tex = img->planes[0].texture;
+    disp = (EGLDisplay)self->ctx;
+    tex  = img->planes[0].texture;
     if (tex < 0) tex = -tex;
     if (tex != 0) {
         GLuint t = (GLuint)tex;
@@ -471,41 +468,20 @@ static void LBX_API backend_destroy_(LBX_GFX *self, LBX_IMAGE *img)
     }
     eimg = (EGLImageKHR)img->user_data;
     if (eimg != EGL_NO_IMAGE_KHR) {
-        lbx_gl_destroy_dmabuf_image(cx->disp, eimg);
+        lbx_gl_destroy_dmabuf_image(disp, eimg);
     }
     img->planes[0].texture = 0;
     img->user_data         = 0;
 }
 
-LBX_GFX *lbx_gl_backend_create(EGLDisplay egl_display)
+LBX_EXT_IMAGE_INTERFACE lbx_gl_external_image(EGLDisplay egl_display)
 {
-    LbxGlBackendCtx *cx;
-    LBX_GFX *g = (LBX_GFX *)malloc(sizeof(LBX_GFX));
-    if (g == NULL) {
-        return NULL;
-    }
-    cx = (LbxGlBackendCtx *)malloc(sizeof(LbxGlBackendCtx));
-    if (cx == NULL) {
-        free(g);
-        return NULL;
-    }
-    cx->disp   = egl_display;
-    g->ctx     = cx;
-    g->Import  = backend_import_;
-    g->Update  = backend_update_;
-    g->Destroy = backend_destroy_;
-    return g;
-}
-
-void lbx_gl_backend_destroy(LBX_GFX *gfx)
-{
-    if (gfx == NULL) {
-        return;
-    }
-    if (gfx->ctx != NULL) {
-        free(gfx->ctx);
-    }
-    free(gfx);
+    LBX_EXT_IMAGE_INTERFACE r;
+    r.ctx     = (void *)egl_display;
+    r.Import  = ext_image_import_;
+    r.Update  = ext_image_update_;
+    r.Destroy = ext_image_destroy_;
+    return r;
 }
 
 #endif /* LBX_GLES_VERSION */
