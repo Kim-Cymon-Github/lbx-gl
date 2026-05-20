@@ -329,7 +329,7 @@ void lbx_gl_image_target_texture(GLenum target, EGLImageKHR image)
  *   img->user_data         : DMA-BUF 경로의 EGLImageKHR (CPU 는 0)
  *
  * 객체 생성·파괴 없음. lbx_gl_external_image() 가 vtable + ctx 묶음 값을
- * 돌려주고 host 가 그 값을 LBX_AVIO_DRIVER.ext_image 에 직접 박는다.
+ * 돌려주고 host 가 그 값을 LBX_AVIO_DRIVER.ext_image 슬롯에 직접 대입한다.
  * ctx 는 EGLDisplay 그대로 (별도 packing 불요).
  *
  * 렌더 컨텍스트 current 스레드에서 호출돼야 한다 (driver 의 Open/Grab/
