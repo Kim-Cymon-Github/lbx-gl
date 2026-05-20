@@ -19,6 +19,7 @@
 #define lbx_gl_dmabufH
 
 #include "lbx_gl.h"
+#include "intf/lbx_intf_avio.h"   /* LBX_GFX (백엔드 주입 vtable) */
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,54 +86,33 @@ LBX_GL_EXPORT void lbx_gl_destroy_dmabuf_image(EGLDisplay egl_display, EGLImageK
 LBX_GL_EXPORT void lbx_gl_image_target_texture(GLenum target, EGLImageKHR image);
 
 /**
- * @brief LBX_IMAGE 한 장을 GL 텍스처에 갱신 — avio v0.2 단일 진입점.
+ * @brief LBX_GFX 백엔드 생성 (GL 임시 구현) — 모델 A "백엔드 주입".
  *
- * 텍스처 생성·소유·파괴는 lbx-gl 책임이다 (VK 백엔드도 자기 리소스로
- * 동일 패턴). host 는 glGenTextures 하지 않는다.
+ * host 가 1회 생성해 Open 후 LBX_AVIO_DEVICE.gfx 에 주입한다. 드라이버가
+ * 자기 버퍼 lifecycle(Import/Update/Destroy)에서 호출 — 드라이버는 GL 을
+ * 모르고 LBX_GFX vtable 만 안다. host 는 백엔드 생성·주입·draw 만.
  *
- * 슬롯 키 = 드라이버-소유 영속 LBX_IMAGE 주소. 드라이버는 버퍼별로
- * LBX_IMAGE 를 영속 보유해야 한다(avio-file: 채널당 1개,
- * avio-v4l2: ring buffer 당 1개). planes[0].texture 는 lbx-gl 소유 —
- * 0 이면 최초 1회 생성, 드라이버는 이 필드를 리셋하지 않는다.
+ * 백엔드는 스테이트리스 — 핸들은 드라이버의 버퍼별 영속 LBX_IMAGE 가
+ * 보유(planes[0].texture: 부호 규약 음수=external OES/양수=2D/0=미생성,
+ * user_data: DMA-BUF 의 EGLImageKHR). Import 는 버퍼당 1회 생성,
+ * Update 는 CPU 재업로드(드라이버가 내용 변경 알 때만 호출, DMA-BUF 는
+ * zero-copy no-op), Destroy 는 Import 와 대칭 파괴.
  *
- * 내부 동작:
- *   - planes[0].native_handle >= 0 (DMA-BUF fd, 실 V4L2):
- *       버퍼당 EGLImage+텍스처 1회 생성(GL_TEXTURE_EXTERNAL_OES). EGLImage 는
- *       그 버퍼 dmabuf 의 영속 view 라 이후 재타겟 불필요(V4L2 가 같은
- *       메모리에 새 프레임 채우면 샘플링 자동 갱신). 파괴는
- *       lbx_gl_release_texture 까지 미룸 → per-frame create/destroy 소멸 →
- *       임베디드 sibling-destroy 세그폴트 원천 제거.
- *       → planes[0].texture = -(tex)  (음수 = external OES)
- *   - native_handle < 0 (CPU 버퍼, avio-file): 텍스처 1회 생성,
- *       img->sequence 가 바뀔 때만 glTexImage2D 재업로드(정지영상은
- *       UI 로 이미지 바꿀 때만 sequence 변경 → 그때만 재업로드).
- *       → planes[0].texture = +(tex)  (양수 = 2D)
+ * vtable 호출은 렌더 컨텍스트 current 스레드에서 이뤄져야 한다.
  *
- * 부호 규약을 lbx-gl 이 박으므로 host 는 분기 불요. 엔진의
- * LBX_IMAGE_BindTextures 가 부호 보고 알맞은 타겟에 바인딩.
+ * NOTE: lbx-gfx 가 lbx-gl 을 대체하면 이 구현을 lbx-gfx 로 이식. LBX_GFX
+ *       seam 이 백엔드 중립이라 드라이버/host 무변경(이 create 만 교체).
  *
- * 렌더 컨텍스트 current 상태에서 호출돼야 한다.
- *
- * @param egl_display  현재 EGLDisplay
- * @param img          driver-소유 영속 LBX_IMAGE
- * @return 0 = 성공, <0 = 실패
+ * @param egl_display  현재 EGLDisplay (백엔드 ctx 에 보관)
+ * @return LBX_GFX* (lbx_gl_backend_destroy 로 해제), 실패 시 NULL
  */
-LBX_GL_EXPORT i32_t lbx_gl_update_texture(EGLDisplay egl_display, LBX_IMAGE *img);
+LBX_GL_EXPORT LBX_GFX *lbx_gl_backend_create(EGLDisplay egl_display);
 
 /**
- * @brief 대칭 해제 — 드라이버가 버퍼/디바이스 정리(Close/Recover/REQBUFS(0))
- *        시 호출. 텍스처+EGLImage 파괴, 슬롯 비움, planes[0].texture=0 리셋
- *        (다음 update 때 재생성 → Recover 시 fd 변경 자동 대응).
- *        렌더 컨텍스트 current 상태에서 호출돼야 한다.
+ * @brief LBX_GFX 백엔드 해제. host 가 컨텍스트 종료 시 1회.
+ *        (텍스처/EGLImage 자체는 드라이버가 Close 에서 Destroy 로 회수.)
  */
-LBX_GL_EXPORT void lbx_gl_release_texture(EGLDisplay egl_display, LBX_IMAGE *img);
-
-/**
- * @brief 백스톱 — 렌더 컨텍스트 종료 시 1회. 드라이버가 release_texture 를
- *        빠뜨려도 lbx-gl 가 만든 모든 텍스처/EGLImage 회수.
- *        렌더 컨텍스트 current 상태에서 호출돼야 한다.
- */
-LBX_GL_EXPORT void lbx_gl_release_all(EGLDisplay egl_display);
+LBX_GL_EXPORT void lbx_gl_backend_destroy(LBX_GFX *gfx);
 
 #endif /* LBX_GLES_VERSION */
 
