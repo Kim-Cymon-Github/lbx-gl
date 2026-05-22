@@ -326,7 +326,10 @@ void lbx_gl_image_target_texture(GLenum target, EGLImageKHR image)
  * LBX_IMAGE 가 보유:
  *   img->planes[0].texture : GL 텍스처 (부호 규약: 음수 external OES /
  *                            양수 2D, 0 = 미생성) — GL backend 내부 약속
- *   img->user_data         : DMA-BUF 경로의 EGLImageKHR (CPU 는 0)
+ *   img->user_data         : DMA-BUF 경로의 EGLImageKHR (u64_t 슬롯에
+ *                            uintptr_t 캐스팅으로 보관; CPU 는 0)
+ *
+ * Import 의 dmabuf 인자로 경로 분기: non-NULL = DMA-BUF, NULL = CPU.
  *
  * 객체 생성·파괴 없음. lbx_gl_external_image() 가 vtable + ctx 묶음 값을
  * 돌려주고 host 가 그 값을 LBX_AVIO_DRIVER.ext_image 슬롯에 직접 대입한다.
@@ -357,10 +360,12 @@ static void cpu_fmt_(u32_t fcc, GLenum *src, GLenum *ifmt)
     }
 }
 
-static i32_t LBX_API ext_image_import_(LBX_EXT_IMAGE_INTERFACE *self, LBX_IMAGE *img)
+static i32_t LBX_API ext_image_import_(LBX_EXT_IMAGE_INTERFACE *self,
+                                       LBX_IMAGE *img,
+                                       const LBX_DMABUF_INFO *dmabuf)
 {
     EGLDisplay disp;
-    i32_t w, h, n, fd0;
+    i32_t w, h;
 
     if (self == NULL || img == NULL) {
         return -1;
@@ -368,26 +373,25 @@ static i32_t LBX_API ext_image_import_(LBX_EXT_IMAGE_INTERFACE *self, LBX_IMAGE 
     disp = (EGLDisplay)self->ctx;
     w    = img->planes[0].size.width;
     h    = img->planes[0].size.height;
-    n    = img->plane_count ? img->plane_count : 1;
-    if (n > LBX_IMAGE_MAX_PLANES) { n = LBX_IMAGE_MAX_PLANES; }
-    fd0  = (i32_t)img->planes[0].native_handle;
 
-    if (fd0 >= 0) {
-        /* DMA-BUF 경로 (실 V4L2). EGLImage+텍스처 생성, 핸들은 img 가 보유. */
-        int   fds[LBX_IMAGE_MAX_PLANES];
-        u32_t offsets[LBX_IMAGE_MAX_PLANES];
-        u32_t pitches[LBX_IMAGE_MAX_PLANES];
+    if (dmabuf != NULL) {
+        /* DMA-BUF 경로 (실 V4L2). EGLImage+텍스처 생성, 핸들은 img 가 보유.
+         * fd / offset / pitch / modifier 는 인자 dmabuf 에서, fourcc 와
+         * width/height 는 img 에서. */
+        int   fds_buf[LBX_IMAGE_MAX_PLANES];
         EGLImageKHR eimg;
         GLuint t = 0;
-        i32_t p;
+        i32_t n, p;
+
+        n = (i32_t)dmabuf->n_planes;
+        if (n <= 0)                    { n = 1; }
+        if (n > LBX_IMAGE_MAX_PLANES)  { n = LBX_IMAGE_MAX_PLANES; }
         for (p = 0; p < n; ++p) {
-            fds[p]     = (int)img->planes[p].native_handle;
-            offsets[p] = 0;
-            pitches[p] = (u32_t)img->planes[p].stride.y;
+            fds_buf[p] = dmabuf->fds[p];
         }
         eimg = lbx_gl_create_dmabuf_image(
-            disp, w, h, img->pixel_format, img->native_handle,
-            n, fds, offsets, pitches, NULL);
+            disp, w, h, img->pixel_format, dmabuf->modifier,
+            n, fds_buf, dmabuf->offsets, dmabuf->pitches, NULL);
         if (eimg == EGL_NO_IMAGE_KHR) {
             return -1;
         }
@@ -400,7 +404,7 @@ static i32_t LBX_API ext_image_import_(LBX_EXT_IMAGE_INTERFACE *self, LBX_IMAGE 
         lbx_gl_image_target_texture(GL_TEXTURE_EXTERNAL_OES, eimg);
         /* EGLImage 는 버퍼 수명 끝까지 live (Destroy 때 해제) →
          * per-frame create/destroy 소멸 → 임베디드 sibling 세그폴트 원천 제거 */
-        img->user_data        = (intptr_t)eimg;
+        img->user_data         = (u64_t)(uintptr_t)eimg;
         img->planes[0].texture = -(intptr_t)t;   /* 음수 = external OES */
         return 0;
     }
@@ -466,7 +470,7 @@ static void LBX_API ext_image_destroy_(LBX_EXT_IMAGE_INTERFACE *self, LBX_IMAGE 
         GLuint t = (GLuint)tex;
         glDeleteTextures(1, &t);
     }
-    eimg = (EGLImageKHR)img->user_data;
+    eimg = (EGLImageKHR)(uintptr_t)img->user_data;
     if (eimg != EGL_NO_IMAGE_KHR) {
         lbx_gl_destroy_dmabuf_image(disp, eimg);
     }

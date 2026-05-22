@@ -2,25 +2,21 @@
 // DMA-BUF -> EGL external image import helpers.
 //
 // Up through 0.1.x, EGL/GLES2 import logic lived inside the avio-v4l2
-// driver. It is now lifted out to the host side. The avio-v4l2 v0.2
-// driver only exposes DMA-BUF fds and metadata via FRAME_EVENT; the
-// host calls these helpers from within OnFrame to build GL textures.
+// driver. It is now lifted out to the host side via the LBX_EXT_IMAGE
+// backend. Drivers expose DMA-BUF fds and metadata through LBX_DMABUF_INFO
+// and call Import / Update / Destroy from their own buffer lifecycle.
 //
 // This location (`lbx-gl`) is temporary. Once the GL backend of `lbx-gfx`
 // is ready, the implementation moves there, and a Vulkan backend
 // (external image import) follows. At that point the host calls only
 // the abstract API of `lbx-gfx` and this header is deprecated.
-//
-// The dependency on lbx-intf's LBX_DMABUF_INFO is intentionally avoided:
-// the host unpacks its raw fields ({fd, offset, pitch, ...}) and passes
-// them explicitly.
 //---------------------------------------------------------------------------
 
 #ifndef lbx_gl_dmabufH
 #define lbx_gl_dmabufH
 
 #include "lbx_gl.h"
-#include "intf/lbx_intf_avio.h"   /* LBX_EXT_IMAGE_INTERFACE */
+#include "intf/lbx_intf_ext_image.h"   /* LBX_EXT_IMAGE_INTERFACE, LBX_DMABUF_INFO */
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,10 +97,11 @@ LBX_GL_EXPORT void lbx_gl_image_target_texture(GLenum target, EGLImageKHR image)
  * The interface is stateless -- handles live in the driver's per-buffer
  * persistent LBX_IMAGE (planes[0].texture uses a sign convention:
  * negative = external OES, positive = 2D, 0 = not created; user_data
- * holds the EGLImageKHR for the DMA-BUF path). Import creates once per
- * buffer; Update re-uploads CPU buffers (called by the driver only when
- * content has changed; the DMA-BUF path is zero-copy and a no-op);
- * Destroy is symmetric with Import.
+ * (u64_t) holds the EGLImageKHR cast for the DMA-BUF path). Import
+ * dispatches by the dmabuf argument: non-NULL = DMA-BUF zero-copy path,
+ * NULL = CPU upload path. Update re-uploads CPU buffers (called by the
+ * driver only when content has changed; the DMA-BUF path is zero-copy
+ * and a no-op); Destroy is symmetric with Import.
  *
  * vtable calls must run on the render-context-current thread.
  *
