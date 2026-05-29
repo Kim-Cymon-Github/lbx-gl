@@ -8,7 +8,8 @@ STRIP ?= strip
 #=============================================================================
 # 라이브러리 .c
 OBJ_C_NAMES   = \
-    lbx_gl
+    lbx_gl \
+    lbx_gl_dmabuf
 
 # 라이브러리 .cpp — -fPIC 필요. CPP_LIB_OBJS 전용 룰에서 따로 컴파일.
 OBJ_CPP_NAMES = \

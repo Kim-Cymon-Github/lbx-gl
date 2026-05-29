@@ -360,36 +360,8 @@ i32_t RC_Free(LBX_RENDER_CONTEXT *ctx)
 }
 
 
-i32_t LBX_IMAGE_BindTextures(const LBX_IMAGE* self)
-{
-    // 픽셀 평면 배열을 가져옴
-    const LBX_PXL_PLANE* p = self->planes;
-    // 마지막 평면부터 시작하며, 바인딩된 텍스처 개수를 0으로 초기화
-    i32_t i = self->plane_count - 1, ret = 0;
-
-    // 역순으로 각 평면을 순회
-    for (; i >= 0; --i) {
-        // 현재 평면의 텍스처 값이 0이 아니면 텍스처가 존재함
-        if (p[i].texture != 0) {
-            // 텍스처 값을 가져옴
-            intptr_t tx = p[i].texture;
-            // 해당 인덱스의 텍스처 유닛을 활성화 (GL_TEXTURE0 + i)
-            GL_CHECK(glActiveTexture(GL_TEXTURE0 + i));
-            // 텍스처 값이 양수이면 GL_TEXTURE_2D 대상에 바인딩
-            if (tx > 0) {
-                GL_CHECK(glBindTexture(GL_TEXTURE_2D, (GLuint)tx));
-            } else {
-                // 텍스처 값이 음수이면 절대값을 사용하여 GL_TEXTURE_EXTERNAL_OES 대상에 바인딩
-                GL_CHECK(glBindTexture(GL_TEXTURE_EXTERNAL_OES, (GLuint)(-tx)));
-            }
-            // 성공적으로 바인딩된 텍스처 개수 증가
-            ++ret;
-        } 
-    }
-
-    // 바인딩된 텍스처 개수를 반환
-    return ret;
-}
+// LBX_IMAGE_BindTextures 제거됨 — lbx-gfx 의 gfx_image_bind_textures 가 후속.
+// 자세한 내용은 lbx_gl.h 의 주석 / lbx-gfx/.omc/plan.md §3.4 참조.
 
 
 /**

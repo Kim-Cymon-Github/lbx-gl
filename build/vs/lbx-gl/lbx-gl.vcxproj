@@ -207,12 +207,14 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\src\gl\lbx_gl.h" />
     <ClInclude Include="..\..\..\src\gl\lbx_gl_class.h" />
+    <ClInclude Include="..\..\..\src\gl\lbx_gl_dmabuf.h" />
     <ClInclude Include="..\..\src\version.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\dllmain.cpp" />
     <ClCompile Include="..\..\..\src\gl\lbx_gl.c" />
     <ClCompile Include="..\..\..\src\gl\lbx_gl_class.cpp" />
+    <ClCompile Include="..\..\..\src\gl\lbx_gl_dmabuf.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\README.md" />
