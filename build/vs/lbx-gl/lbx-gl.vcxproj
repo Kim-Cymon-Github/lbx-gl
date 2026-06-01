@@ -111,7 +111,7 @@
       <AdditionalDependencies>lbx-core.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>lit prebuild</Command>
+      <Command></Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
@@ -141,7 +141,7 @@
       <AdditionalDependencies>lbx-core.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>lit prebuild</Command>
+      <Command></Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
@@ -167,7 +167,7 @@
       <AdditionalDependencies>lbx-core.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>lit prebuild</Command>
+      <Command></Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
@@ -197,7 +197,7 @@
       <AdditionalDependencies>lbx-core.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>lit prebuild</Command>
+      <Command></Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
