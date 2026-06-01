@@ -48,4 +48,9 @@
   <ItemGroup>
     <Text Include="..\..\..\src\version.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\version.rc">
+      <Filter>리소스 파일</Filter>
+    </ResourceCompile>
+  </ItemGroup>
 </Project>

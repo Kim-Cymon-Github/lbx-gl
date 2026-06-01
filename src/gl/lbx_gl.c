@@ -15,7 +15,35 @@
 #   pragma package(smart_init)
 #endif
 
-u32_t lbx_gl_version(void) { return version_(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, BUILD_NUMBER); }
+// 빌드 산출물(.so/.dll)에 "로딩 없이" 읽을 수 있는 버전 문자열을 박는다.
+//  - Linux  : 전용 ELF 섹션 .litbig.version 에 넣고 `strings`/`readelf -p` 로 추출.
+//  - Windows: VERSIONINFO(version.rc) 가 담당하므로 여기서는 emit 하지 않는다 (MSVC).
+// 매직 키(LBVERINFO=) 로 grep/파싱한다. 예: "LBVERINFO=lbx-gl 2.1.x.x"
+#define LBX_VERTAG_KEY      "LBVERINFO="
+#define LBX_VERTAG_STR2(x)  #x
+#define LBX_VERTAG_STR(x)   LBX_VERTAG_STR2(x)
+#define LBX_VERTAG_TEXT \
+    LBX_VERTAG_KEY "lbx-gl " \
+    LBX_VERTAG_STR(VERSION_MAJOR) "." LBX_VERTAG_STR(VERSION_MINOR) "." \
+    LBX_VERTAG_STR(VERSION_PATCH) "." LBX_VERTAG_STR(BUILD_NUMBER)
+
+#if defined(__GNUC__) || defined(__clang__)
+#  if defined(__has_attribute) && __has_attribute(retain)
+#    define LBX_VERTAG_ATTR __attribute__((used, retain, section(".litbig.version")))
+#  else
+#    define LBX_VERTAG_ATTR __attribute__((used, section(".litbig.version")))
+#  endif
+LBX_VERTAG_ATTR static const char lbx_version_tag[] = LBX_VERTAG_TEXT;
+#  define LBX_HAS_VERTAG 1
+#endif
+
+u32_t lbx_gl_version(void)
+{
+#ifdef LBX_HAS_VERTAG
+    (void)lbx_version_tag; // keep-alive: --gc-sections 에도 섹션이 살아남도록 참조
+#endif
+    return version_(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, BUILD_NUMBER);
+}
 
 
 #ifdef LBX_GLES_VERSION

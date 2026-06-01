@@ -222,6 +222,9 @@
   <ItemGroup>
     <Text Include="..\..\..\src\version.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\version.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
