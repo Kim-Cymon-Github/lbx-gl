@@ -223,7 +223,7 @@
     <Text Include="..\..\..\src\version.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\..\src\version.rc" />
+    <ResourceCompile Include="lbx-gl.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

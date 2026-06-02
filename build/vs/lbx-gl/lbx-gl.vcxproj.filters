@@ -49,7 +49,7 @@
     <Text Include="..\..\..\src\version.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\..\src\version.rc">
+    <ResourceCompile Include="lbx-gl.rc">
       <Filter>리소스 파일</Filter>
     </ResourceCompile>
   </ItemGroup>
