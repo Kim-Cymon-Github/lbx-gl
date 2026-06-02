@@ -44,6 +44,7 @@ extern "C" {
 #endif //#ifdef __cplusplus
 
 LBX_GL_EXPORT u32_t lbx_gl_version(void);
+LBX_GL_EXPORT const char* lbx_gl_version_str(void);
 
 #define RC_FLAG_OWNS_NATIVE_WINDOW (0x00000001u)
 #define RC_FLAG_OWNS_NATIVE_DISPLAY (0x00000002u)

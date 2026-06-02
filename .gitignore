@@ -67,3 +67,6 @@ build/linux/*
 # Claude Code / oh-my-claudecode 작업 디렉토리
 .claude/
 .omc/
+
+# Visual Studio 리소스 편집기 부산물
+*.aps

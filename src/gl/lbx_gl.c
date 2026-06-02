@@ -5,44 +5,32 @@
 #   pragma hdrstop
 #endif
 
+// version.txt 를 lbx_type.h(→lbx_version.h) 보다 먼저 include (임베드 매크로 활성화)
+#include "version.txt"
 #include "lbx_gl.h"
 #include "lbx_core.h"
 #include "system/lbx_log.h"
-#include "version.txt"
 
 //---------------------------------------------------------------------------
 #if defined(__BORLANDC__)
 #   pragma package(smart_init)
 #endif
 
-// 빌드 산출물(.so/.dll)에 "로딩 없이" 읽을 수 있는 버전 문자열을 박는다.
-//  - Linux  : 전용 ELF 섹션 .litbig.version 에 넣고 `strings`/`readelf -p` 로 추출.
-//  - Windows: VERSIONINFO(version.rc) 가 담당하므로 여기서는 emit 하지 않는다 (MSVC).
-// 매직 키(LBVERINFO=) 로 grep/파싱한다. 예: "LBVERINFO=lbx-gl 2.1.x.x"
-#define LBX_VERTAG_KEY      "LBVERINFO="
-#define LBX_VERTAG_STR2(x)  #x
-#define LBX_VERTAG_STR(x)   LBX_VERTAG_STR2(x)
-#define LBX_VERTAG_TEXT \
-    LBX_VERTAG_KEY "lbx-gl " \
-    LBX_VERTAG_STR(VERSION_MAJOR) "." LBX_VERTAG_STR(VERSION_MINOR) "." \
-    LBX_VERTAG_STR(VERSION_PATCH) "." LBX_VERTAG_STR(BUILD_NUMBER)
-
-#if defined(__GNUC__) || defined(__clang__)
-#  if defined(__has_attribute) && __has_attribute(retain)
-#    define LBX_VERTAG_ATTR __attribute__((used, retain, section(".litbig.version")))
-#  else
-#    define LBX_VERTAG_ATTR __attribute__((used, section(".litbig.version")))
-#  endif
-LBX_VERTAG_ATTR static const char lbx_version_tag[] = LBX_VERTAG_TEXT;
-#  define LBX_HAS_VERTAG 1
-#endif
+// 빌드 산출물(.so/.dll)에 "로딩 없이" 읽을 수 있는 버전 정보를 박는다 (lbx_version.h).
+//  - Linux  : .litbig.version 섹션에 요약 1줄(LBVERINFO=) + VERSIONINFO 대응 필드 전체.
+//  - Windows: VERSIONINFO(version.rc) 가 전체 담당하므로 요약 1줄만.
+LBX_EMBED_VERSION_INFO();
 
 u32_t lbx_gl_version(void)
 {
-#ifdef LBX_HAS_VERTAG
-    (void)lbx_version_tag; // keep-alive: --gc-sections 에도 섹션이 살아남도록 참조
-#endif
     return version_(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, BUILD_NUMBER);
+}
+
+// 임베드된 버전 정보 문자열(LBVERINFO 블록)을 반환한다. export 되어 심볼이
+// 유지되므로 lbx_version_info 의 keep-alive 도 겸한다.
+const char *lbx_gl_version_str(void)
+{
+    return lbx_version_info;
 }
 
 

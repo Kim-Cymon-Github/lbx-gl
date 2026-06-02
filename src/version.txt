@@ -8,6 +8,8 @@
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
 #define VERSION_PATCH 69
-#define BUILD_NUMBER 411
+#define BUILD_NUMBER 412
+
+#define LBX_MODULE_NAME "lbx-gl"
 
 #endif //#ifndef version_H
