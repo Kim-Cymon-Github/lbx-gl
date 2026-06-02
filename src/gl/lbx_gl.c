@@ -6,6 +6,7 @@
 #endif
 
 // version.txt 를 lbx_type.h(→lbx_version.h) 보다 먼저 include (임베드 매크로 활성화)
+#define LBX_MODULE_NAME "lbx-gl"
 #include "version.txt"
 #include "lbx_gl.h"
 #include "lbx_core.h"
