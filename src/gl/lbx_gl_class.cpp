@@ -1462,6 +1462,7 @@ TGLBufferBase::~TGLBufferBase()
     if (handle) {
         GL_CHECK(glDeleteBuffers(1, &handle));
     }
+    ClearLocalData(); // CPU측 미러(svec) 해제 — GL 핸들과 수명이 같다
 }
 //---------------------------------------------------------------------------
 void TGLBufferBase::Bind(GLenum target)
